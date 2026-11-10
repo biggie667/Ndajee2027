@@ -24,6 +24,11 @@ h1,h2,h3{font-family:var(--fd);margin:0;letter-spacing:-.01em}
 a{color:var(--blue)}
 .num{font-variant-numeric:tabular-nums}
 
+[hidden]{display:none!important}
+#login{min-height:100%;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,#EAF2FF,#F3F7FD 55%)}
+.login{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px rgba(22,48,107,.12);padding:30px 30px 26px;width:380px;max-width:100%;display:flex;flex-direction:column;gap:14px}
+.login h2{font-size:20px}.login .btn{justify-content:center;padding:10px}
+#l-err{margin:0;min-height:18px;color:var(--bad);font-size:12.5px;font-weight:500}
 /* Shell */
 .app{display:grid;grid-template-columns:252px 1fr;height:100%}
 .side{background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
@@ -195,11 +200,21 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+<div id="login" hidden>
+  <form class="login" onsubmit="doLogin(event)">
+    <div class="brand" style="padding:0 0 18px"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
+    <h2>Connexion</h2>
+    <div class="fld"><label for="l-em">E-mail</label><input class="inp" id="l-em" type="email" autocomplete="username" required></div>
+    <div class="fld"><label for="l-pw">Mot de passe</label><input class="inp" id="l-pw" type="password" autocomplete="current-password" required></div>
+    <p id="l-err" role="alert"></p>
+    <button class="btn p" id="l-btn" type="submit">Se connecter</button>
+  </form>
+</div>
+<div class="app" id="app" hidden>
   <aside class="side">
     <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-f">DG Groupe · v12<br>Jeu de données de démonstration</div>
+    <div class="side-f">DG Groupe · v13<br>Données de démonstration</div>
   </aside>
   <div class="wrap">
     <header class="top" id="top"></header>
@@ -212,7 +227,6 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
 <script>
 'use strict';
 /* ============ Référentiels ============ */
-const KEY='ndage_acr_v12';
 const ST={DRAFT:'Brouillon',SUB:'Soumis',RET:'À corriger',APP:'Approuvé',REJ:'Refusé',PRT:'Imprimé',DLV:'Remis'};
 const ST_COL={DRAFT:'#B8C3D6',SUB:'#2563EB',RET:'#E0A100',APP:'#0F9D6C',REJ:'#D0383F',PRT:'#6D4FD6',DLV:'#0E8FA6'};
 const RQ={PEND:'En attente',OK:'Accordé',NO:'Refusé'};
@@ -258,93 +272,43 @@ const fmtT=t=>{const d=new Date(t);return d.toLocaleDateString('fr-FR')+' '+d.to
 const opt=(list,val,first)=>(first!=null?`<option value="">${first}</option>`:'')+list.map(o=>{const[v,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(v)}"${v===val?' selected':''}>${esc(l)}</option>`}).join('');
 function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
-/* ============ Données de démonstration ============ */
-function seed(){
-  const r=rng(2026),pick=a=>a[Math.floor(r()*a.length)];
-  const cats=[
-   {c:'ATH',l:'Athlète',b:'ATHLÈTE',col:'#1D4ED8',pop:'ath'},
-   {c:'OFE',l:"Officiel d'équipe",b:'ÉQUIPE',col:'#0E7490',pop:'ath'},
-   {c:'CDM',l:'Chef de mission',b:'CHEF DE MISSION',col:'#5B3FC4',pop:'ath'},
-   {c:'FI',l:'Fédération internationale',b:'FÉD. INTERNATIONALE',col:'#B45309',pop:'fi'},
-   {c:'FN',l:'Fédération nationale',b:'FÉD. NATIONALE',col:'#047857',pop:'fn'},
-   {c:'STF',l:'Staff',b:'STAFF',col:'#E3000F',pop:'staff'},
-   {c:'MED',l:'Média',b:'PRESSE',col:'#BE185D',pop:'media'},
-   {c:'VOL',l:'Volontaire',b:'VOLONTAIRE',col:'#A16207',pop:'vol'}];
-  const zones=[
-   {c:'ALL',n:'Tous les sites de compétition'},{c:'CED',n:'Complexe Équestre de Diamniadio'},{c:'CID',n:'Complexe Iba Mar Diop'},
-   {c:'COR',n:'Corniche Ouest'},{c:'CTO',n:"Complexe Tour de l'Œuf"},{c:'DAR',n:'Dakar Arena'},{c:'DEX',n:'Dakar Expo Centre'},{c:'DHQ',n:'Siège – Dakar',o:1}];
-  const privs=[{c:'1',n:'Tribune officielle'},{c:'2',n:'Zones de préparation des athlètes'},{c:'3',n:'Zones presse / médias'},{c:'4',n:'Zones protocole & invités'},{c:'5',n:'Zone résidentielle (village)'}];
-  const matrix={
-   ATH:{z:['ALL'],p:['2','5'],m:1},OFE:{z:['ALL'],p:['2','5'],m:1},CDM:{z:['ALL'],p:['1','2','4','5'],m:1},
-   FI:{z:['ALL'],p:['1','2','4'],m:0},FN:{z:['ALL'],p:['1','2'],m:0},
-   STF:{z:zones.map(z=>z.c),p:['1','2','3','4','5'],m:1},MED:{z:['ALL'],p:['3'],m:0},VOL:{z:['DAR','DEX'],p:[],m:1}};
-  const LN=['Diallo','Ndiaye','Sarr','Fall','Diop','Ba','Sow','Gueye','Faye','Mbaye','Cissé','Kane','Sy','Thiam','Diagne','Seck','Camara','Traoré','Koné','Okafor','Mensah','Kamau','Martin','Dubois','Silva','Tanaka','Bennani','Haddad','Nkosi','Mwangi','Rossi','García','Müller','Smith','Lee'];
-  const FN_F=['Astou','Aïssatou','Fatou','Mariama','Khady','Awa','Coumba','Ndèye','Aminata','Rokhaya','Claire','Yuki','Amara','Leïla','Sofia','Grace','Zainab','Nadia'];
-  const FN_M=['Mamadou','Moussa','Ibrahima','Ousmane','Cheikh','Abdou','Babacar','Modou','Pape','Alioune','Lucas','Kenji','Kwame','Youssef','Mateo','David','Tunde','Karim'];
-  const CNO=['Sénégal','France','Kenya','Brésil','Japon','Maroc','Nigeria','Canada','Côte d\'Ivoire','Italie','Allemagne','Afrique du Sud','Espagne','Ghana'];
-  const SPORT=['Athlétisme','Natation','Basketball 3x3','Judo','Escrime','Lutte','Football','Handball','Taekwondo','Cyclisme','Équitation','Aviron'];
-  const ORG={
-   FI:['World Athletics','World Aquatics','FIBA','IJF','FIE','UWW','UCI','World Rowing','FEI','World Taekwondo'],
-   FN:['Féd. Sénégalaise d\'Athlétisme','Féd. Sénégalaise de Natation','Féd. Sénégalaise de Basketball','Féd. Sénégalaise de Judo','Féd. Sénégalaise de Lutte','Féd. Sénégalaise de Football','Féd. Sénégalaise d\'Escrime'],
-   STF:['Accréditation','Opérations sites','Logistique','Transport','Protocole','Technologie','Services médicaux','Communication'],
-   MED:['RTS','APS','Le Soleil','AFP','BBC Afrique','Canal+ Afrique','L\'Équipe','Reuters'],
-   VOL:['Pool Dakar','Pool Diamniadio','Pool Saly']};
-  const FCT={OFE:['Entraîneur','Entraîneur adjoint','Médecin d\'équipe','Kinésithérapeute','Chef d\'équipe'],CDM:['Chef de mission','Chef de mission adjoint'],
-   FI:['Délégué technique','Juge-arbitre','Officiel technique','Président de jury'],FN:['Officiel technique national','Secrétaire général','Directeur technique'],
-   STF:['Personnel','Coordinateur','Responsable de site','Superviseur','Agent d\'accueil'],MED:['Journaliste','Photographe','Cameraman','Commentateur'],
-   VOL:['Accueil','Orientation spectateurs','Assistance délégations','Support logistique']};
-  const plan=[['ATH',70],['OFE',22],['CDM',8],['FI',20],['FN',18],['STF',30],['MED',24],['VOL',48]];
-  const persons=[];let seq=210700;
-  for(const[c,n]of plan)for(let i=0;i<n;i++){
-    const sx=r()<.5?'F':'M',team=['ATH','OFE','CDM'].includes(c);
-    const x=r(),st=x<.10?'DLV':x<.28?'PRT':x<.55?'APP':x<.77?'SUB':x<.83?'RET':x<.86?'REJ':'DRAFT';
-    const early=['DRAFT','SUB','RET'].includes(st);
-    const y=c==='ATH'?2008+Math.floor(r()*4):1964+Math.floor(r()*40);
-    const p={id:(seq+=1+Math.floor(r()*37))+'-'+(10+Math.floor(r()*80)),ln:pick(LN),fn:pick(sx==='F'?FN_F:FN_M),sx,
-      dob:`${y}-${String(1+Math.floor(r()*12)).padStart(2,'0')}-${String(1+Math.floor(r()*28)).padStart(2,'0')}`,
-      cat:c,org:team?pick(CNO):pick(ORG[c]),fct:c==='ATH'?pick(SPORT):pick(FCT[c]),
-      nat:'',photo:'',hasPh:!(early&&r()<.3),doc:!(early&&r()<.2),
-      bg:early?(r()<.55?'PEND':r()<.06?'FLAG':'OK'):'OK',st,xz:[],xp:[],xm:0,note:''};
-    p.nat=team?p.org:c==='FI'||c==='MED'?pick(CNO):'Sénégal';
-    if(c==='ATH'&&early&&r()<.06)p.dob='2004'+p.dob.slice(4);
-    if(early&&r()<.05)p.dob='';
-    persons.push(p);
-  }
-  // deux doublons volontaires pour la revue
-  const d1=persons.find(p=>p.st==='SUB'&&p.cat==='VOL'),d2=persons.find(p=>p.st==='SUB'&&p.cat==='MED');
-  [d1,d2].forEach((s,i)=>{if(s)persons.push({...s,id:(seq+=11+i)+'-'+(31+i),st:'SUB',xz:[],xp:[]})});
-  const roles={Administrateur:PERMS.map(p=>p[0]),'Responsable ACR':['view','edit','review','access','matrix','print','export'],Validateur:['view','review','export'],
-   'Opérateur d\'impression':['view','print'],'Représentant d\'organisation':['view','edit'],'Lecture seule':['view']};
-  const users=[
-   {id:'u1',n:'Aïssatou Ndiaye',e:'a.ndiaye@ndage.example',role:'Administrateur',org:'DG Groupe',on:1},
-   {id:'u2',n:'Moussa Sarr',e:'m.sarr@ndage.example',role:'Responsable ACR',org:'Accréditation',on:1},
-   {id:'u3',n:'Fatou Diop',e:'f.diop@ndage.example',role:'Validateur',org:'Accréditation',on:1},
-   {id:'u4',n:'Ibrahima Fall',e:'i.fall@ndage.example',role:'Opérateur d\'impression',org:'Centre ACR',on:1},
-   {id:'u5',n:'Claire Martin',e:'c.martin@ndage.example',role:'Représentant d\'organisation',org:'France',on:1},
-   {id:'u6',n:'Ousmane Ba',e:'o.ba@ndage.example',role:'Lecture seule',org:'Direction',on:0}];
-  const appd=persons.filter(p=>['APP','PRT'].includes(p.st));
-  const mk=(i,type,code,motif,st)=>({id:'AA-'+String(i+1).padStart(3,'0'),pid:appd[i*7%appd.length].id,type,code,motif,by:pick(users).n,t:Date.now()-(i+1)*86400000*.8,st,dec:st==='PEND'?'':'Moussa Sarr'});
-  const reqs=[mk(0,'zone','DHQ','Réunions de coordination quotidiennes au siège','PEND'),mk(1,'priv','3','Interviews en zone mixte','PEND'),mk(2,'priv','1','Accompagnement d\'une délégation officielle','PEND'),
-   mk(3,'zone','CED','Renfort sur les épreuves équestres','PEND'),mk(4,'meal','','Présence sur site supérieure à 6 h','PEND'),mk(5,'priv','4','Mission protocole','OK'),
-   mk(6,'zone','DEX','Affectation modifiée','OK'),mk(7,'priv','5','Demande non justifiée par la fonction','NO')];
-  reqs.filter(q=>q.st==='OK').forEach(q=>{const p=persons.find(x=>x.id===q.pid);if(q.type==='zone')p.xz.push(q.code);else if(q.type==='priv')p.xp.push(q.code)});
-  const audit=[['Moussa Sarr','Matrice d\'accès','Privilège 4 ajouté à la catégorie Chef de mission'],['Fatou Diop','Revue','Lot de 14 dossiers approuvés'],['Ibrahima Fall','Impression','Lot de 22 accréditations imprimé'],
-   ['Aïssatou Ndiaye','Utilisateurs','Compte Ousmane Ba désactivé'],['Claire Martin','Dossiers','Import de 9 dossiers (France)'],['Moussa Sarr','Ajouts d\'accès','Demande AA-008 refusée']]
-   .map((a,i)=>({t:Date.now()-(i+1)*5.3e6,u:a[0],a:a[1],d:a[2],pid:''}));
-  return{cats,zones,privs,matrix,persons,roles,users,reqs,audit,me:'u1',
-   tpl:{bar:'#15803D',ev:'NDAGE 2026',sub:'Dakar · Sénégal',showEv:1,showZ:1,showM:1,showLeg:1,gen:'Zones de circulation générale'}};
-}
-
 /* ============ État ============ */
 let S,VIEW='dash',F={q:'',cat:'',st:'',org:'',page:1},SEL=new Set(),UI={rule:'',rep:'cat',rq:'PEND',tplP:'',pt:'APP',aq:''};
-function load(){try{const j=localStorage.getItem(KEY);if(j){S=JSON.parse(j);if(S&&S.persons&&S.tpl)return}}catch(e){}S=seed()}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){try{const c=JSON.parse(JSON.stringify(S));c.persons.forEach(p=>p.photo='');localStorage.setItem(KEY,JSON.stringify(c))}catch(e2){}}}
+/* ---- Synchronisation avec le serveur ---- */
+let LAST=null,SYNC=Promise.resolve(),TMR=0,LOADED=0;
+const snapOf=()=>({p:new Map(S.persons.map(p=>[p.id,JSON.stringify(p)])),r:new Map(S.reqs.map(q=>[q.id,JSON.stringify(q)])),u:new Map(S.users.map(u=>[u.id,JSON.stringify(u)])),
+  roles:JSON.stringify(S.roles),cats:JSON.stringify(S.cats),zones:JSON.stringify(S.zones),privs:JSON.stringify(S.privs),matrix:JSON.stringify(S.matrix),tpl:JSON.stringify(S.tpl)});
+async function api(path,body){const r=await fetch(path,body===undefined?{credentials:'same-origin'}:{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  let j={};try{j=await r.json()}catch(e){}return{ok:r.ok,status:r.status,j}}
+function save(){clearTimeout(TMR);TMR=setTimeout(flush,250)}
+function flush(){TMR=0;SYNC=SYNC.then(async()=>{
+  if(!S||!LAST)return;const n=snapOf(),b={},au=S.audit.filter(a=>a._n);
+  const pu=S.persons.filter(p=>LAST.p.get(p.id)!==n.p.get(p.id)),pd=[...LAST.p.keys()].filter(id=>!n.p.has(id));
+  if(pu.length||pd.length)b.persons={up:pu,del:pd};
+  const ru=S.reqs.filter(q=>LAST.r.get(q.id)!==n.r.get(q.id));if(ru.length)b.reqs={up:ru};
+  const uu=S.users.filter(u=>LAST.u.get(u.id)!==n.u.get(u.id));if(uu.length)b.users={up:uu};
+  ['roles','cats','zones','privs','matrix','tpl'].forEach(k=>{if(LAST[k]!==n[k])b[k]=S[k]});
+  if(au.length)b.audit=au;
+  if(!Object.keys(b).length)return;
+  let r;try{r=await api('/api/sync',b)}catch(e){r={ok:false,status:0,j:{error:'Connexion au serveur impossible.'}}}
+  if(r.ok){au.forEach(a=>delete a._n);uu.forEach(u=>{delete u.pw;n.u.set(u.id,JSON.stringify(u))});LAST=n;return}
+  if(r.status===401){showLogin(r.j.error);return}
+  closeAll();await reload();toast('Non enregistré — '+(r.j.error||'erreur serveur'));
+}).catch(e=>console.error(e))}
+async function reload(){const r=await api('/api/state');if(r.status===401){showLogin();return false}if(!r.ok){showLogin(r.j.error||'Serveur indisponible.');return false}
+  S=r.j;LAST=snapOf();LOADED=Date.now();$('#login').hidden=true;$('#app').hidden=false;render();return true}
+function showLogin(msg){S=null;LAST=null;closeAll();$('#app').hidden=true;$('#login').hidden=false;$('#l-err').textContent=msg||'';$('#l-pw').value=''}
+async function doLogin(ev){ev.preventDefault();const b=$('#l-btn');b.disabled=true;$('#l-err').textContent='';
+  let r;try{r=await api('/api/login',{email:$('#l-em').value,password:$('#l-pw').value})}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
+  b.disabled=false;if(!r.ok){$('#l-err').textContent=r.j.error||'Connexion impossible.';return}
+  VIEW='dash';await reload()}
+async function logout(){await SYNC;try{await api('/api/logout',{})}catch(e){}showLogin()}
 const me=()=>S.users.find(u=>u.id===S.me)||S.users[0];
 const can=k=>(S.roles[me().role]||[]).includes(k);
 const P=id=>S.persons.find(p=>p.id===id);
 const cat=c=>S.cats.find(x=>x.c===c)||{c,l:c,b:c,col:'#555',pop:''};
 const nm=p=>p?`${p.fn} ${p.ln.toUpperCase()}`:'—';
-function log(a,d,pid){S.audit.unshift({t:Date.now(),u:me().n,a,d,pid:pid||''});if(S.audit.length>600)S.audit.length=600;save()}
+function log(a,d,pid){S.audit.unshift({t:Date.now(),u:me().n,a,d,pid:pid||'',_n:1});if(S.audit.length>600)S.audit.length=600;save()}
 function eff(p){const m=S.matrix[p.cat]||{z:[],p:[],m:0};
   return{z:S.zones.filter(z=>m.z.includes(z.c)||p.xz.includes(z.c)),p:S.privs.filter(x=>m.p.includes(x.c)||p.xp.includes(x.c)),m:!!(m.m||p.xm)}}
 function age(dob){if(!dob)return null;const d=new Date(dob),r=new Date('2026-12-31');return r.getFullYear()-d.getFullYear()}
@@ -388,7 +352,7 @@ function render(){
   $('#nav').innerHTML=NAV.map(g=>`<div class="nav-g">${g[0]}</div>`+g[1].map(i=>{const c=count(i[0]);return `<button class="nav-i${VIEW===i[0]?' on':''}" onclick="go('${i[0]}')">${ico(i[2])}<span>${i[1]}</span>${c?`<span class="ct hot num">${c}</span>`:''}</button>`}).join('')).join('');
   const u=me();
   $('#top').innerHTML=`<button class="btn menu-b" onclick="$('#app').classList.toggle('nav-open')">Menu</button><div><h1>${TITLES[VIEW]}</h1></div><span class="sp"></span>
-   <div class="sess"><span>Session</span><select class="inp" onchange="S.me=this.value;save();render();toast('Session : '+me().n+' ('+me().role+')')">${opt(S.users.filter(x=>x.on).map(x=>[x.id,x.n+' — '+x.role]),u.id)}</select></div>`;
+   <div class="sess"><span><b>${esc(u.n)}</b> · ${esc(u.role)}</span><button class="btn sm" onclick="logout()">Déconnexion</button></div>`;
   $('#main').innerHTML=can('view')?V[VIEW]():'<div class="card empty">Votre rôle ne permet pas de consulter cette page.</div>';
   if(fid){const e=document.getElementById(fid);if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(x){}}}
 }
@@ -676,7 +640,7 @@ function printIds(ids,specimen){
   $('#printarea').innerHTML=ps.map(p=>`<div class="sheet">${badge(p)}${badge(p,1)}</div>`).join('');
   closeAll();
   modal(`Impression — ${ps.length} accréditation(s)`,`<div class="pair" style="max-height:52vh;overflow:auto">${ps.slice(0,3).map(p=>`<div style="display:flex;gap:10px;--bs:6.5px">${badge(p)}${badge(p,1)}</div>`).join('')}</div>
-   <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">${ps.length>3?`Aperçu des 3 premières sur ${ps.length}. `:''}Une page A4 paysage par accréditation, recto et verso côte à côte, traits de coupe en pointillés. Si la fenêtre d'impression ne s'ouvre pas dans cet aperçu en ligne, ouvrez le fichier <b>index.html</b> du ZIP dans votre navigateur.</p>`,
+   <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">${ps.length>3?`Aperçu des 3 premières sur ${ps.length}. `:''}Une page A4 paysage par accréditation, recto et verso côte à côte, traits de coupe en pointillés. </p>`,
   `<button class="btn" onclick="closeOv(this)">Fermer</button><button class="btn" onclick="window.print()">Lancer l'impression</button>${PRN.length?`<button class="btn p" onclick="printDone()">Confirmer ${PRN.length} imprimée(s)</button>`:''}`,1);
 }
 function printDone(){PRN.forEach(id=>setSt(id,'PRT',null,1));log('Impression',`Lot de ${PRN.length} accréditation(s) imprimé`);const n=PRN.length;PRN=[];SEL.clear();closeAll();render();toast(n+' accréditation(s) marquée(s) imprimée(s)')}
@@ -708,7 +672,7 @@ V.users=()=>{
   const ad=can('admin'),dis=ad?'':'disabled';
   return `<div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Utilisateurs</h3><span class="sp"></span>${ad?`<button class="btn p" onclick="userEdit('')">Ajouter un utilisateur</button>`:''}</div>
   <div class="tw"><table class="t"><thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Organisation</th><th>État</th><th></th></tr></thead><tbody>${S.users.map(u=>`<tr><td><b>${esc(u.n)}</b></td><td>${esc(u.e)}</td><td>${esc(u.role)}</td><td>${esc(u.org)}</td><td>${u.on?'<span class="pill s-APP">Actif</span>':'<span class="pill s-DRAFT">Désactivé</span>'}</td><td class="r">${ad?`<button class="btn sm" onclick="userEdit('${u.id}')">Modifier</button>`:''}</td></tr>`).join('')}</tbody></table></div></div>
-  <div class="card"><div class="card-h"><div><h3>Privilèges par rôle</h3><span style="font-size:12px;color:var(--ink3)">Chaque case ouvre ou ferme réellement l'action correspondante dans l'application.</span></div><span class="sp"></span>${ad?`<button class="btn" onclick="roleAdd()">Nouveau rôle</button><button class="btn" onclick="resetAsk()">Réinitialiser la démo</button>`:''}</div>
+  <div class="card"><div class="card-h"><div><h3>Privilèges par rôle</h3><span style="font-size:12px;color:var(--ink3)">Chaque case ouvre ou ferme réellement l'action correspondante dans l'application.</span></div><span class="sp"></span>${ad?`<button class="btn" onclick="roleAdd()">Nouveau rôle</button>`:''}</div>
   <div class="tw"><table class="t mx"><thead><tr><th>Rôle</th>${PERMS.map(p=>`<th style="white-space:normal;min-width:86px">${p[1]}</th>`).join('')}</tr></thead><tbody>${Object.keys(S.roles).map(r=>`<tr><td><b>${esc(r)}</b><small>${S.users.filter(u=>u.role===r).length} utilisateur(s)</small></td>${PERMS.map(p=>`<td><input type="checkbox" ${r==='Administrateur'?'disabled':dis} ${S.roles[r].includes(p[0])?'checked':''} onchange="permTgl(this.dataset.r,'${p[0]}')" data-r="${esc(r)}" aria-label="${esc(r)} : ${p[1]}"></td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
 };
 function permTgl(r,k){const a=S.roles[r],i=a.indexOf(k);i<0?a.push(k):a.splice(i,1);log('Utilisateurs',`Rôle ${r} : « ${PERMS.find(p=>p[0]===k)[1]} » ${i<0?'accordé':'retiré'}`);render()}
@@ -717,15 +681,14 @@ function roleAdd(){modal('Nouveau rôle',`<div class="fld"><label for="ro-n">Nom
 function userEdit(id){const u=S.users.find(x=>x.id===id)||{n:'',e:'',role:'Lecture seule',org:'',on:1};
   modal(id?'Modifier l\'utilisateur':'Ajouter un utilisateur',`<div class="form"><div class="fld"><label for="u-n">Nom complet</label><input class="inp" id="u-n" value="${esc(u.n)}"></div><div class="fld"><label for="u-e">E-mail</label><input class="inp" id="u-e" type="email" value="${esc(u.e)}"></div>
    <div class="fld"><label for="u-r">Rôle</label><select class="inp" id="u-r">${opt(Object.keys(S.roles),u.role)}</select></div><div class="fld"><label for="u-o">Organisation</label><input class="inp" id="u-o" value="${esc(u.org)}"></div>
+   <div class="fld full"><label for="u-pw">${id?'Nouveau mot de passe (laisser vide pour ne pas le changer)':'Mot de passe (8 caractères minimum)'}</label><input class="inp" id="u-pw" type="password" autocomplete="new-password"></div>
    <label class="full" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="u-on" ${u.on?'checked':''}> Compte actif</label></div>`,
   `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="userSave('${id}')">Enregistrer</button>`)}
-function userSave(id){const n=$('#u-n').value.trim(),e=$('#u-e').value.trim();if(!n||!e){toast('Nom et e-mail obligatoires');return}
+function userSave(id){const n=$('#u-n').value.trim(),e=$('#u-e').value.trim(),pw=$('#u-pw').value;if(!n||!e){toast('Nom et e-mail obligatoires');return}
+  if((!id&&pw.length<8)||(pw&&pw.length<8)){toast('Mot de passe : 8 caractères minimum');return}
   let u=S.users.find(x=>x.id===id);if(!u){u={id:'u'+Date.now()};S.users.push(u)}
   if(u.id===S.me&&!$('#u-on').checked){toast('Vous ne pouvez pas désactiver votre propre session');return}
-  Object.assign(u,{n,e,role:$('#u-r').value,org:$('#u-o').value.trim(),on:$('#u-on').checked?1:0});log('Utilisateurs',(id?'Modification de ':'Création de ')+n+' ('+u.role+')');closeAll();render()}
-function resetAsk(){modal('Réinitialiser les données de démonstration',`<p style="margin:0">Toutes les modifications faites dans ce navigateur seront effacées et le jeu de données d'origine sera rechargé.</p>`,
-  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn bad" onclick="try{localStorage.removeItem(KEY)}catch(e){}S=seed();closeAll();go('dash');toast('Données réinitialisées')">Réinitialiser</button>`)}
-
+  Object.assign(u,{n,e,role:$('#u-r').value,org:$('#u-o').value.trim(),on:$('#u-on').checked?1:0});if(pw)u.pw=pw;log('Utilisateurs',(id?'Modification de ':'Création de ')+n+' ('+u.role+')');closeAll();render()}
 /* ============ Journal d'audit ============ */
 V.audit=()=>{
   const q=UI.aq.toLowerCase(),rows=S.audit.filter(a=>!q||(a.u+' '+a.a+' '+a.d+' '+a.pid).toLowerCase().includes(q));
@@ -734,8 +697,8 @@ V.audit=()=>{
 };
 
 /* ============ Démarrage ============ */
-load();
-(function(){const h=location.hash.slice(1);if(V[h])VIEW=h;render()})();
+(async function(){const h=location.hash.slice(1);if(V[h])VIEW=h;try{await reload()}catch(e){showLogin('Serveur indisponible.')}})();
+window.addEventListener('focus',()=>{if(S&&!TMR&&!$('#ovs').children.length&&Date.now()-LOADED>30000)SYNC.then(()=>{if(S&&!TMR&&!$('#ovs').children.length)reload()})});
 window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(V[h]&&h!==VIEW)go(h)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=$('#ovs').lastElementChild;if(o)o.remove()}});
 </script>

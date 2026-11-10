@@ -1,0 +1,12 @@
+{
+  "name": "ndajee2027",
+  "version": "13.0.0",
+  "private": true,
+  "description": "NDAGE 2026 - Systeme d'accreditation (Vercel + PostgreSQL)",
+  "scripts": {
+    "dev": "node dev.js",
+    "db:init": "node -e \"require('./lib/db').withTx(c=>require('./lib/store').ensureDb(c,true)).then(()=>{console.log('Base initialisee');process.exit(0)}).catch(e=>{console.error(e.message);process.exit(1)})\""
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": { "pg": "^8.13.1" }
+}
