@@ -5,9 +5,11 @@ Application web d'accréditation hébergée sur Vercel, avec base PostgreSQL.
 ## Fonctions
 - Tableau de bord
 - Demandes, revue des données, vérifications
+- Invitations : lien personnel vers un formulaire public (nom, prénom, adresse, téléphone, photo, fonction)
+- Notification par e-mail des dossiers incomplets (à la personne ou au représentant d'organisation)
 - Populations : athlètes & équipes, fédérations internationales et nationales, staff, médias, volontaires
 - Matrice d'accès (zones / privilèges par catégorie) et ajouts d'accès individuels
-- Template d'accréditation (recto / verso) et impression par lots (A4 paysage)
+- Template d'accréditation (recto / verso) et impression par lots au format A5, avec export PDF
 - Rapports & exports CSV, import en masse
 - Utilisateurs & rôles, journal d'audit
 
@@ -15,7 +17,7 @@ Application web d'accréditation hébergée sur Vercel, avec base PostgreSQL.
 | Dossier | Rôle |
 |---|---|
 | `public/index.html` | Interface (une seule page, sans framework) |
-| `api/` | Fonctions Vercel : `login`, `logout`, `state`, `sync`, `health` |
+| `api/` | Fonctions Vercel : `login`, `logout`, `state`, `sync`, `invite`, `form` (public), `notify`, `health` |
 | `lib/` | Connexion à la base, sessions, schéma, contrôle des droits, données initiales |
 | `db/schema.sql` | Schéma PostgreSQL (référence) |
 
@@ -28,6 +30,8 @@ du rôle connecté et applique le lot dans une transaction.
 | `DATABASE_URL` | Chaîne de connexion PostgreSQL (Neon, Supabase…) |
 | `SESSION_SECRET` | Clé de signature des sessions (16 caractères minimum) |
 | `SEED_PASSWORD` | Mot de passe initial des comptes de test, utilisé une seule fois à la création de la base |
+| `RESEND_API_KEY` | Facultatif. Clé [Resend](https://resend.com) pour l'envoi automatique des e-mails (invitations, dossiers incomplets). Sans elle, les liens et messages sont affichés pour être transmis à la main |
+| `MAIL_FROM` | Facultatif. Expéditeur des e-mails, sur un domaine vérifié chez Resend, ex. `NDAGE 2026 <accreditation@mondomaine.com>` |
 
 ## Premier démarrage
 À la première connexion, si la base est vide, les tables sont créées et le jeu de

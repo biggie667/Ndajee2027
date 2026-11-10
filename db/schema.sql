@@ -53,12 +53,15 @@ CREATE TABLE persons (
   pos          bigserial NOT NULL,
   last_name    text NOT NULL,
   first_name   text NOT NULL,
-  sex          char(1) NOT NULL CHECK (sex IN ('F','M')),
+  sex          char(1) CHECK (sex IN ('F','M')),
   birth_date   date,
   nationality  text NOT NULL DEFAULT '',
   category_code text NOT NULL REFERENCES categories(code),
   organisation text NOT NULL,
   function     text NOT NULL DEFAULT '',
+  address      text NOT NULL DEFAULT '',
+  phone        text NOT NULL DEFAULT '',
+  email        text NOT NULL DEFAULT '',
   photo        text NOT NULL DEFAULT '',
   has_photo    boolean NOT NULL DEFAULT false,
   doc_ok       boolean NOT NULL DEFAULT false,
@@ -95,6 +98,19 @@ CREATE TABLE access_requests (
   decided_by   text NOT NULL DEFAULT ''
 );
 CREATE INDEX access_requests_person_idx ON access_requests (person_id);
+
+CREATE TABLE invitations (
+  id            bigserial PRIMARY KEY,
+  token_hash    text NOT NULL UNIQUE,
+  email         text NOT NULL,
+  category_code text NOT NULL REFERENCES categories(code),
+  organisation  text NOT NULL,
+  person_id     text UNIQUE REFERENCES persons(id) ON DELETE SET NULL,
+  created_by    text NOT NULL,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  last_sent_at  timestamptz,
+  submitted_at  timestamptz
+);
 
 CREATE TABLE audit_log (
   id         bigserial PRIMARY KEY,

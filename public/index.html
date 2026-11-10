@@ -6,6 +6,7 @@
 <title>NDAGE 2026 Accréditation</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@600;700;800&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{
   color-scheme:light;
@@ -28,6 +29,10 @@ a{color:var(--blue)}
 #login{min-height:100%;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,#EAF2FF,#F3F7FD 55%)}
 .login{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 20px 50px rgba(22,48,107,.12);padding:30px 30px 26px;width:380px;max-width:100%;display:flex;flex-direction:column;gap:14px}
 .login h2{font-size:20px}.login .btn{justify-content:center;padding:10px}
+#pub{min-height:100%;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,#EAF2FF,#F3F7FD 55%)}
+#pub .login{width:520px}
+.pub-ph{display:flex;gap:14px;align-items:center}.pub-ph img,.pub-ph .ph0{width:87px;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--line2);background:var(--mute-bg);flex:none}
+.lnk{display:flex;gap:6px;margin:4px 0 10px}.lnk input{flex:1;font:12px ui-monospace,Menlo,monospace}
 #l-err{margin:0;min-height:18px;color:var(--bad);font-size:12.5px;font-weight:500}
 /* Shell */
 .app{display:grid;grid-template-columns:252px 1fr;height:100%}
@@ -143,7 +148,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:90;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
 
 /* Accréditation (badge) : tout en em, mis à l'échelle par font-size */
-.bdg{font-size:var(--bs,9px);width:31em;height:46em;background:#fff;color:#000;padding:2em 2em 2.2em;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;line-height:1.2;flex:none;border:1px solid #D9DFEA}
+.bdg{font-size:var(--bs,9px);width:32.5em;height:46em;background:#fff;color:#000;padding:2em 2em 2.2em;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;line-height:1.2;flex:none;border:1px solid #D9DFEA}
 .bdg>*{flex:none}.bdg svg{display:block}
 .b-top{display:flex;gap:1.6em;height:14.6em}
 .b-ph{width:11.6em;height:14.6em;background:#EEF1F5;flex:none;overflow:hidden}
@@ -159,7 +164,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
 .b-meal svg{width:1.5em;height:1.7em}
 .b-qr{width:6em;margin-left:auto}.b-qr b{display:block;font-size:.92em;margin-bottom:.25em;white-space:nowrap}
 .b-qr svg{width:6em;height:6em}
-.b-zones{display:flex;flex-wrap:wrap;gap:1em 1.4em;margin:1.6em 0 1.6em}
+.b-zones{display:flex;flex-wrap:wrap;gap:1em 1.5em;margin:1.6em 0 1.6em}
 .b-z{width:4.2em;height:2em;background:#000;color:#fff;font-weight:700;font-size:1em;display:grid;place-items:center;border:.12em solid #000;letter-spacing:.01em}
 .b-z span{font-size:1.5em;line-height:1}
 .b-z.o{background:#fff;color:#000}
@@ -190,16 +195,18 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   .pair .bdg{font-size:7px}
 }
 @media print{
-  @page{size:A4 landscape;margin:8mm}
+  @page{size:A4 landscape;margin:0}
   html,body{height:auto;background:#fff}
   body>*:not(#printarea){display:none!important}
   #printarea{display:block}
-  .sheet{display:flex;gap:10mm;justify-content:center;align-items:flex-start;page-break-after:always;break-after:page}
-  .sheet .bdg{font-size:3.1mm;border:.2mm dashed #999;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sheet{display:flex;gap:0;justify-content:center;align-items:flex-start;page-break-after:always;break-after:page}
+  .sheet .bdg+.bdg{border-left:.2mm dashed #999}
+  .sheet .bdg{font-size:4.55mm;border:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 </head>
 <body>
+<div id="pub" hidden></div>
 <div id="login" hidden>
   <form class="login" onsubmit="doLogin(event)">
     <div class="brand" style="padding:0 0 18px"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
@@ -214,7 +221,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   <aside class="side">
     <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-f">DG Groupe · v13<br>Données de démonstration</div>
+    <div class="side-f">DG Groupe · v14<br>Données de démonstration</div>
   </aside>
   <div class="wrap">
     <header class="top" id="top"></header>
@@ -233,7 +240,7 @@ const RQ={PEND:'En attente',OK:'Accordé',NO:'Refusé'};
 const PERMS=[['view','Consulter les dossiers'],['edit','Créer / modifier'],['review','Valider / refuser'],['access','Décider des ajouts d\'accès'],['matrix','Modifier la matrice'],['print','Imprimer / remettre'],['export','Exporter les rapports'],['admin','Gérer utilisateurs & rôles']];
 const NAV=[
  ['Pilotage',[['dash','Tableau de bord','grid']]],
- ['Accréditation',[['dem','Demandes','file'],['revue','Revue des données','check'],['verif','Vérifications','shield']]],
+ ['Accréditation',[['dem','Demandes','file'],['inv','Invitations','mail'],['revue','Revue des données','check'],['verif','Vérifications','shield']]],
  ['Populations',[['ath','Athlètes & équipes','medal'],['fi','Fédérations internationales','globe'],['fn','Fédérations nationales','flag'],['staff','Staff','brief'],['media','Médias','mic'],['vol','Volontaires','heart']]],
  ['Accès & privilèges',[['matrix','Matrice d\'accès','table'],['acces','Ajouts d\'accès','plus']]],
  ['Production',[['tpl','Template d\'accréditation','card'],['print','Impression','printer']]],
@@ -258,7 +265,8 @@ const IC={
  printer:'<path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><rect x="7" y="14" width="10" height="7"/>',
  chart:'<path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/>',
  users:'<circle cx="9" cy="8" r="3.500"/><path d="M2.500 20a6.500 6.500 0 0 1 13 0M16 4.500a3.500 3.500 0 0 1 0 7M18 14.500a6 6 0 0 1 3.500 5.500"/>',
- clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'
 };
 const ico=k=>`<svg viewBox="0 0 24 24">${IC[k]||''}</svg>`;
 const FORK='<svg viewBox="0 0 16 20"><path d="M3 1v5.500a2 2 0 0 0 1.500 1.900V19h1.500V8.400A2 2 0 0 0 7.500 6.500V1H6.300v5H5.600V1H4.400v5H3.700V1zM12.500 1c-1.700 0-2.500 2.200-2.500 4.500 0 2 .700 3.400 1.600 3.800V19h1.500V1z" fill="#000"/></svg>';
@@ -315,8 +323,8 @@ function age(dob){if(!dob)return null;const d=new Date(dob),r=new Date('2026-12-
 let DUP=null;
 function dupes(){if(DUP)return DUP;const m={};S.persons.forEach(p=>{if(p.st==='REJ')return;const k=(p.ln+'|'+p.fn+'|'+p.dob).toLowerCase();(m[k]=m[k]||[]).push(p.id)});
   DUP=new Set();Object.values(m).forEach(a=>{if(a.length>1)a.forEach(i=>DUP.add(i))});return DUP}
-const RULES=[['photo','Photo manquante',1],['doc','Pièce d\'identité non fournie',1],['dob','Date de naissance manquante',1],['age','Âge hors limites (athlète)',1],['dup','Doublon possible',0],['bgp','Vérification en attente',0],['bgf','Vérification signalée',1],['fct','Fonction non renseignée',0]];
-function issues(p){const r=[];if(!p.hasPh&&!p.photo)r.push('photo');if(!p.doc)r.push('doc');if(!p.dob)r.push('dob');
+const RULES=[['photo','Photo manquante',1],['doc','Pièce d\'identité non fournie',1],['dob','Date de naissance manquante',1],['dobw','Date de naissance non renseignée',0],['age','Âge hors limites (athlète)',1],['dup','Doublon possible',0],['bgp','Vérification en attente',0],['bgf','Vérification signalée',1],['fct','Fonction non renseignée',0]];
+function issues(p){const r=[];if(!p.hasPh&&!p.photo)r.push('photo');if(!p.doc)r.push('doc');if(!p.dob)r.push(p.cat==='ATH'?'dob':'dobw');
   const a=age(p.dob);if(p.cat==='ATH'&&a!=null&&(a<15||a>18))r.push('age');if(dupes().has(p.id))r.push('dup');
   if(p.bg==='PEND')r.push('bgp');if(p.bg==='FLAG')r.push('bgf');if(!p.fct)r.push('fct');return r}
 const rule=k=>RULES.find(r=>r[0]===k);
@@ -401,7 +409,7 @@ function reg(pop,intro){
     ${cs.length>1?`<select class="inp" onchange="F.cat=this.value;F.page=1;render()">${opt(cs.map(c=>[c.c,c.l]),F.cat,'Toutes catégories')}</select>`:''}
     <select class="inp" onchange="F.st=this.value;F.page=1;render()">${opt(Object.entries(ST),F.st,'Tous statuts')}</select>
     <select class="inp" onchange="F.org=this.value;F.page=1;render()" style="max-width:210px">${opt(orgs,F.org,'Toutes organisations')}</select></div>
-    <div class="tb">${can('export')?`<button class="btn" onclick="exportCur()">Exporter (${rows.length})</button>`:''}${can('edit')?`<button class="btn" onclick="importCSV()">Import en masse</button><button class="btn p" onclick="editP('','${cs[0].c}')">Nouveau dossier</button>`:''}</div></div>
+    <div class="tb">${can('export')?`<button class="btn" onclick="exportCur()">Exporter (${rows.length})</button>`:''}${can('edit')?`<button class="btn" onclick="invNew('${cs[0].c}')">Inviter par lien</button><button class="btn" onclick="importCSV()">Import en masse</button><button class="btn p" onclick="editP('','${cs[0].c}')">Nouveau dossier</button>`:''}</div></div>
    ${SEL.size?`<div class="card-h" style="background:var(--sky3)"><b>${SEL.size} sélectionné(s)</b><span class="sp"></span>
      ${can('edit')?`<button class="btn sm" onclick="bulk('SUB')">Soumettre</button>`:''}${can('review')?`<button class="btn sm" onclick="bulk('APP')">Approuver</button>`:''}${can('print')?`<button class="btn sm" onclick="printIds([...SEL])">Imprimer</button>`:''}<button class="btn sm" onclick="SEL.clear();render()">Annuler</button></div>`:''}
    <div class="tw"><table class="t"><thead><tr><th class="c"><input type="checkbox" ${all?'checked':''} onchange="selPage(this.checked)" aria-label="Tout sélectionner"></th><th>N° dossier</th><th>Titulaire</th><th>Catégorie</th><th>Organisation</th><th>Fonction</th><th>Contrôles</th><th>Statut</th></tr></thead>
@@ -414,8 +422,8 @@ V.dem=()=>reg(null);
 V.ath=()=>reg('ath');V.fi=()=>reg('fi');V.fn=()=>reg('fn');V.staff=()=>reg('staff');V.media=()=>reg('media');V.vol=()=>reg('vol');
 function tgl(id){SEL.has(id)?SEL.delete(id):SEL.add(id);render()}
 function selPage(on){CUR.slice((F.page-1)*25,F.page*25).forEach(p=>on?SEL.add(p.id):SEL.delete(p.id));render()}
-const HEAD=['numero','nom','prenom','sexe','date_naissance','nationalite','categorie','organisation','fonction','statut','verification','zones','privileges','restauration','anomalies'];
-const line=p=>{const e=eff(p);return[p.id,p.ln,p.fn,p.sx,p.dob,p.nat,cat(p.cat).l,p.org,p.fct,ST[p.st],p.bg,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',issues(p).map(k=>rule(k)[1]).join(' | ')]};
+const HEAD=['numero','nom','prenom','sexe','date_naissance','nationalite','categorie','organisation','fonction','adresse','telephone','email','statut','verification','zones','privileges','restauration','anomalies'];
+const line=p=>{const e=eff(p);return[p.id,p.ln,p.fn,p.sx,p.dob,p.nat,cat(p.cat).l,p.org,p.fct,p.addr,p.tel,p.email,ST[p.st],p.bg,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',issues(p).map(k=>rule(k)[1]).join(' | ')]};
 function exportCur(){exportFile('dossiers_'+VIEW+'.csv',csv([HEAD,...CUR.map(line)]))}
 
 /* ============ Fiche dossier ============ */
@@ -427,12 +435,13 @@ function openP(id){
   if(can('review')&&p.st==='SUB')act+=`<button class="btn ok" onclick="setSt('${id}','APP')">Approuver</button><button class="btn" onclick="askWhy('${id}','RET')">Renvoyer pour correction</button><button class="btn bad" onclick="askWhy('${id}','REJ')">Refuser</button>`;
   if(can('print')&&['APP','PRT'].includes(p.st))act+=`<button class="btn p" onclick="printIds(['${id}'])">${p.st==='PRT'?'Réimprimer':'Imprimer'}</button>`;
   if(can('print')&&p.st==='PRT')act+=`<button class="btn ok" onclick="setSt('${id}','DLV')">Marquer remis</button>`;
+  if(can('review')&&(issues(p).length||p.note)&&p.st!=='REJ')act+=`<button class="btn" onclick="notifyAsk('${id}')">Notifier par e-mail</button>`;
   if(can('edit'))act+=`<button class="btn" onclick="editP('${id}')">Modifier</button><button class="btn" onclick="reqNew('${id}')">Demander un accès</button>`;
   drawer(`<div class="modal-h"><div style="flex:1;min-width:0"><h3>${esc(nm(p))}</h3><span style="font-size:12px;color:var(--ink3)" class="num">Dossier ${p.id}</span></div>${pill(p.st)}<button class="xb" onclick="closeOv(this)" aria-label="Fermer">×</button></div>
   <div class="modal-b" style="flex:1">
    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start"><div style="--bs:5px">${badge(p)}</div>
    <dl class="dl" style="flex:1;min-width:220px"><dt>Catégorie</dt><dd><i class="cat-d" style="background:${c.col}"></i>${esc(c.l)}</dd><dt>Organisation</dt><dd>${esc(p.org)}</dd><dt>Fonction</dt><dd>${esc(p.fct)||'—'}</dd>
-    <dt>Sexe</dt><dd>${p.sx==='F'?'Féminin':'Masculin'}</dd><dt>Naissance</dt><dd>${fmtD(p.dob)}${age(p.dob)!=null?` <span style="color:var(--ink3)">(${age(p.dob)} ans en 2026)</span>`:''}</dd><dt>Nationalité</dt><dd>${esc(p.nat)||'—'}</dd>
+    <dt>Sexe</dt><dd>${{F:'Féminin',M:'Masculin'}[p.sx]||'—'}</dd><dt>Naissance</dt><dd>${fmtD(p.dob)}${age(p.dob)!=null?` <span style="color:var(--ink3)">(${age(p.dob)} ans en 2026)</span>`:''}</dd><dt>Nationalité</dt><dd>${esc(p.nat)||'—'}</dd><dt>Adresse</dt><dd>${esc(p.addr)||'—'}</dd><dt>Téléphone</dt><dd>${esc(p.tel)||'—'}</dd><dt>E-mail</dt><dd>${esc(p.email)||'—'}</dd>
     <dt>Photo</dt><dd>${p.photo||p.hasPh?'Fournie':'Manquante'}</dd><dt>Pièce d'identité</dt><dd>${p.doc?'Fournie':'Non fournie'}</dd><dt>Vérification</dt><dd>${{OK:'Conforme',PEND:'En attente',FLAG:'Signalée'}[p.bg]}</dd></dl></div>
    ${p.note?`<div class="note w" style="margin:14px 0 0"><b>Commentaire de revue :</b> ${esc(p.note)}</div>`:''}
    <div class="sec">Contrôles de données</div><div>${issChips(p)}</div>
@@ -451,8 +460,10 @@ function setSt(id,st,why,quiet){
   log('Statut',`${nm(p)} → ${ST[st]}${why?' ('+why+')':''}`,id);
   if(!quiet){closeAll();render();toast(nm(p)+' : '+ST[st]);if(st!=='REJ')openP(id)}return true;
 }
-function askWhy(id,st){modal(st==='RET'?'Renvoyer pour correction':'Refuser le dossier',`<div class="fld"><label for="why">Motif communiqué au demandeur (obligatoire)</label><textarea class="inp" id="why" placeholder="Ex. : photo non conforme, fond non uni"></textarea></div>`,
-  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="const w=$('#why').value.trim();if(!w){toast('Le motif est obligatoire');return}setSt('${id}','${st}',w)">Confirmer</button>`)}
+function askWhy(id,st){const p=P(id);modal(st==='RET'?'Renvoyer pour correction':'Refuser le dossier',`<div class="fld"><label for="why">Motif communiqué au demandeur (obligatoire)</label><textarea class="inp" id="why" placeholder="Ex. : photo non conforme, fond non uni"></textarea></div>
+  ${st==='RET'?`<div class="fld" style="margin-top:12px"><label for="why-n">Prévenir par e-mail</label><select class="inp" id="why-n">${opt([['','Ne pas envoyer d\'e-mail'],['person','La personne'+(p.email?' ('+p.email+')':' — aucune adresse enregistrée')],['org','Le représentant de l\'organisation ('+p.org+')']],'')}</select></div>`:''}`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="whyOk('${id}','${st}')">Confirmer</button>`)}
+function whyOk(id,st){const w=$('#why').value.trim(),n=$('#why-n')?$('#why-n').value:'';if(!w){toast('Le motif est obligatoire');return}setSt(id,st,w);if(n)doNotify(id,n)}
 function bulk(st){let ok=0,ko=0;[...SEL].forEach(id=>{const p=P(id);const from=st==='SUB'?['DRAFT','RET']:['SUB'];if(p&&from.includes(p.st)&&setSt(id,st,'',1))ok++;else ko++});
   SEL.clear();render();toast(`${ok} dossier(s) passés à « ${ST[st]} »${ko?`, ${ko} ignoré(s) (statut ou anomalie bloquante)`:''}`)}
 
@@ -462,10 +473,12 @@ function editP(id,defCat){
   const p=id?P(id):{ln:'',fn:'',sx:'F',dob:'',nat:'',cat:defCat||S.cats[0].c,org:'',fct:'',doc:false,photo:'',hasPh:false};PH=p.photo||'';
   modal(id?'Modifier le dossier':'Nouveau dossier',`<div class="form">
    <div class="fld"><label for="e-ln">Nom</label><input class="inp" id="e-ln" value="${esc(p.ln)}"></div><div class="fld"><label for="e-fn">Prénom</label><input class="inp" id="e-fn" value="${esc(p.fn)}"></div>
-   <div class="fld"><label for="e-sx">Sexe</label><select class="inp" id="e-sx">${opt([['F','Féminin'],['M','Masculin']],p.sx)}</select></div><div class="fld"><label for="e-dob">Date de naissance</label><input class="inp" id="e-dob" type="date" value="${p.dob}"></div>
+   <div class="fld"><label for="e-sx">Sexe</label><select class="inp" id="e-sx">${opt([['F','Féminin'],['M','Masculin']],p.sx||'','Non renseigné')}</select></div><div class="fld"><label for="e-dob">Date de naissance</label><input class="inp" id="e-dob" type="date" value="${p.dob}"></div>
    <div class="fld"><label for="e-cat">Catégorie</label><select class="inp" id="e-cat">${opt(S.cats.map(c=>[c.c,c.l]),p.cat)}</select></div><div class="fld"><label for="e-nat">Nationalité</label><input class="inp" id="e-nat" value="${esc(p.nat)}"></div>
    <div class="fld"><label for="e-org">Organisation</label><input class="inp" id="e-org" list="orgs" value="${esc(p.org)}"><datalist id="orgs">${[...new Set(S.persons.map(x=>x.org))].sort().map(o=>`<option value="${esc(o)}">`).join('')}</datalist></div>
    <div class="fld"><label for="e-fct">Fonction / discipline</label><input class="inp" id="e-fct" value="${esc(p.fct)}"></div>
+   <div class="fld full"><label for="e-addr">Adresse</label><input class="inp" id="e-addr" value="${esc(p.addr)}"></div>
+   <div class="fld"><label for="e-tel">Téléphone</label><input class="inp" id="e-tel" type="tel" value="${esc(p.tel)}"></div><div class="fld"><label for="e-email">E-mail</label><input class="inp" id="e-email" type="email" value="${esc(p.email)}"></div>
    <div class="fld"><label for="e-ph">Photo d'identité</label><input class="inp" id="e-ph" type="file" accept="image/*" onchange="readPh(this)"></div>
    <div class="fld"><label>&nbsp;</label><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="e-doc" ${p.doc?'checked':''}> Pièce d'identité fournie et lisible</label></div></div>`,
   `${id&&can('admin')?`<button class="btn bad" style="margin-right:auto" onclick="delP('${id}')">Supprimer</button>`:''}<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="saveP('${id||''}')">Enregistrer</button>`);
@@ -475,7 +488,7 @@ function saveP(id){
   const g=k=>$('#e-'+k).value.trim(),ln=g('ln'),fn=g('fn');if(!ln||!fn||!g('org')){toast('Nom, prénom et organisation sont obligatoires');return}
   let p=id?P(id):null;
   if(!p){const n=Math.max(...S.persons.map(x=>parseInt(x.id)))+1+Math.floor(Math.random()*20);p={id:n+'-'+(10+Math.floor(Math.random()*80)),bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:'',hasPh:false,photo:''};S.persons.unshift(p)}
-  Object.assign(p,{ln,fn,sx:g('sx'),dob:g('dob'),cat:g('cat'),nat:g('nat'),org:g('org'),fct:g('fct'),doc:$('#e-doc').checked});if(PH){p.photo=PH;p.hasPh=true}
+  Object.assign(p,{ln,fn,sx:g('sx'),dob:g('dob'),cat:g('cat'),nat:g('nat'),org:g('org'),fct:g('fct'),addr:g('addr'),tel:g('tel'),email:g('email'),doc:$('#e-doc').checked});if(PH){p.photo=PH;p.hasPh=true}
   log('Dossiers',(id?'Modification de ':'Création de ')+nm(p),p.id);closeAll();render();openP(p.id);toast('Dossier enregistré');
 }
 function delP(id){const p=P(id);modal('Supprimer le dossier',`<p style="margin:0">Supprimer définitivement le dossier de <b>${esc(nm(p))}</b> ? Cette action est tracée dans le journal d'audit.</p>`,
@@ -510,7 +523,7 @@ V.revue=()=>{
    ${can('export')?`<button class="btn" onclick="CUR=RV;exportFile('revue_donnees.csv',csv([HEAD,...RV.map(line)]))">Exporter</button>`:''}</div>
    <div class="tw"><table class="t"><thead><tr><th>Titulaire</th><th>Catégorie</th><th>Organisation</th><th>Anomalies</th><th>Statut</th><th></th></tr></thead><tbody>
    ${(RV=rows).slice(0,80).map(p=>`<tr class="row" onclick="openP('${p.id}')"><td><b>${esc(nm(p))}</b><small class="num">${p.id}</small></td><td>${esc(cat(p.cat).l)}</td><td>${esc(p.org)}</td><td>${issChips(p)}</td><td>${pill(p.st)}</td>
-    <td class="r" onclick="event.stopPropagation()" style="white-space:nowrap">${can('review')&&p.st==='SUB'?`<button class="btn sm" ${blocking(p).length?'disabled title="Anomalie bloquante"':''} onclick="setSt('${p.id}','APP',null,1)&&(render(),toast('Dossier approuvé'))">Approuver</button> <button class="btn sm" onclick="askWhy('${p.id}','RET')">Renvoyer</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Rien à traiter.</td></tr>'}
+    <td class="r" onclick="event.stopPropagation()" style="white-space:nowrap">${can('review')&&p.st==='SUB'?`<button class="btn sm" ${blocking(p).length?'disabled title="Anomalie bloquante"':''} onclick="setSt('${p.id}','APP',null,1)&&(render(),toast('Dossier approuvé'))">Approuver</button> <button class="btn sm" onclick="askWhy('${p.id}','RET')">Renvoyer</button>`:''}${can('review')&&issues(p).length?` <button class="btn sm" onclick="notifyAsk('${p.id}')">Notifier</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Rien à traiter.</td></tr>'}
    </tbody></table></div>${rows.length>80?`<div class="pg">80 premiers dossiers affichés sur ${rows.length}. Exportez pour la liste complète.</div>`:''}</div>`;
 };
 let RV=[];
@@ -614,7 +627,7 @@ V.tpl=()=>{
    <div class="card"><div class="card-h"><h3>Bandeau par catégorie</h3></div><div class="tw"><table class="t"><tbody>${S.cats.map((c,i)=>`<tr><td style="width:44px"><input type="color" ${dis} value="${c.col}" onchange="S.cats[${i}].col=this.value;save();render()" aria-label="Couleur ${esc(c.l)}" style="width:30px;height:26px;padding:0;border:0;background:none"></td><td><small>${esc(c.l)}</small><input class="inp" ${dis} value="${esc(c.b)}" onchange="S.cats[${i}].b=this.value.toUpperCase();save();render()" aria-label="Libellé du bandeau ${esc(c.l)}" style="width:100%"></td></tr>`).join('')}</tbody></table></div></div>
   </div>
   <div class="card"><div class="card-h"><h3>Recto et verso</h3><span class="sp"></span><span style="font-size:12px;color:var(--ink3)">Zones et privilèges issus de la matrice d'accès</span></div><div class="card-b"><div class="pair" style="--bs:10.5px">${badge(p)}${badge(p,1)}</div>
-   <p style="font-size:12.5px;color:var(--ink2);margin:14px 0 0">Structure reprise du modèle fourni : photo en haut à gauche, bandeau de catégorie, nom, fonction, pictogramme restauration, numéro et QR code, cases de zones, bande de privilèges ; au verso, identité, légende des zones et des privilèges, bande répétée. Les zones hors compétition sont encadrées au lieu d'être pleines.</p></div></div></div>
+   <p style="font-size:12.5px;color:var(--ink2);margin:14px 0 0">Format A5 (148 × 210 mm). Structure reprise du modèle fourni : photo en haut à gauche, bandeau de catégorie, nom, fonction, pictogramme restauration, numéro et QR code, cases de zones, bande de privilèges ; au verso, identité, légende des zones et des privilèges, bande répétée. Les zones hors compétition sont encadrées au lieu d'être pleines.</p></div></div></div>
   <style>@media (max-width:1100px){#tpl-g{grid-template-columns:1fr!important}}</style>`;
 };
 function tplSet(k,v){S.tpl[k]=v;log('Template','Réglage « '+k+' » modifié');render()}
@@ -632,16 +645,16 @@ V.print=()=>{
    <td>${e.z.map(z=>`<span class="chip k">${esc(z.c)}</span>`).join('')}</td><td>${e.p.map(x=>`<span class="chip x">${esc(x.c)}</span>`).join('')}${e.m?'<span class="chip">Restauration</span>':''}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Aucune accréditation dans cet état.</td></tr>'}</tbody></table></div>
   ${rows.length>100?`<div class="pg">100 premières lignes affichées sur ${rows.length}.</div>`:''}</div>`;
 };
-let PRN=[];
+let PRN=[],PRL=[];
 function printIds(ids,specimen){
   const ps=ids.map(P).filter(p=>p&&(specimen||['APP','PRT','DLV'].includes(p.st)));
   if(!ps.length){toast('Seuls les dossiers approuvés peuvent être imprimés');return}
-  PRN=specimen?[]:ps.filter(p=>p.st==='APP').map(p=>p.id);
+  PRL=ps;PRN=specimen?[]:ps.filter(p=>p.st==='APP').map(p=>p.id);
   $('#printarea').innerHTML=ps.map(p=>`<div class="sheet">${badge(p)}${badge(p,1)}</div>`).join('');
   closeAll();
   modal(`Impression — ${ps.length} accréditation(s)`,`<div class="pair" style="max-height:52vh;overflow:auto">${ps.slice(0,3).map(p=>`<div style="display:flex;gap:10px;--bs:6.5px">${badge(p)}${badge(p,1)}</div>`).join('')}</div>
-   <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">${ps.length>3?`Aperçu des 3 premières sur ${ps.length}. `:''}Une page A4 paysage par accréditation, recto et verso côte à côte, traits de coupe en pointillés. </p>`,
-  `<button class="btn" onclick="closeOv(this)">Fermer</button><button class="btn" onclick="window.print()">Lancer l'impression</button>${PRN.length?`<button class="btn p" onclick="printDone()">Confirmer ${PRN.length} imprimée(s)</button>`:''}`,1);
+   <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">${ps.length>3?`Aperçu des 3 premières sur ${ps.length}. `:''}Format A5 (148 × 210 mm) : une page A4 paysage par accréditation, recto et verso côte à côte, à couper au milieu. Le PDF (une page A5 par face) est téléchargé en même temps que l'impression.</p>`,
+  `<button class="btn" onclick="closeOv(this)">Fermer</button><button class="btn" onclick="savePdf(PRL)">Télécharger le PDF</button><button class="btn p" onclick="savePdf(PRL);window.print()">Imprimer + PDF</button>${PRN.length?`<button class="btn ok" onclick="printDone()">Confirmer ${PRN.length} imprimée(s)</button>`:''}`,1);
 }
 function printDone(){PRN.forEach(id=>setSt(id,'PRT',null,1));log('Impression',`Lot de ${PRN.length} accréditation(s) imprimé`);const n=PRN.length;PRN=[];SEL.clear();closeAll();render();toast(n+' accréditation(s) marquée(s) imprimée(s)')}
 
@@ -696,8 +709,117 @@ V.audit=()=>{
   <div class="tw"><table class="t"><thead><tr><th>Date</th><th>Utilisateur</th><th>Domaine</th><th>Détail</th><th>Dossier</th></tr></thead><tbody>${rows.slice(0,150).map(a=>`<tr${a.pid&&P(a.pid)?` class="row" onclick="openP('${a.pid}')"`:''}><td class="num" style="white-space:nowrap">${fmtT(a.t)}</td><td>${esc(a.u)}</td><td><span class="chip x">${esc(a.a)}</span></td><td>${esc(a.d)}</td><td class="num">${esc(a.pid)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Aucune entrée.</td></tr>'}</tbody></table></div></div>`;
 };
 
+/* ============ PDF (A5, une page par face) ============ */
+function pdfBadge(doc,p,back){
+  const U=148/32.5,c=cat(p.cat),e=eff(p),T=S.tpl,rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+  const txt=(t,X,Y,size,o={})=>{t=String(t??'');doc.setFont('helvetica',o.b?'bold':'normal');let pt=size*U*2.8346;doc.setFontSize(pt);
+    if(o.max)while(doc.getTextWidth(t)>o.max*U&&pt>4){pt-=.4;doc.setFontSize(pt)}doc.setTextColor(...(o.col||[0,0,0]));doc.text(t,X*U,Y*U,{align:o.al||'left'})};
+  const rect=(X,Y,W,H,fill,stroke)=>{if(fill)doc.setFillColor(...fill);if(stroke){doc.setDrawColor(0,0,0);doc.setLineWidth(.12*U)}doc.rect(X*U,Y*U,W*U,H*U,fill&&stroke?'FD':fill?'F':'S')};
+  const photo=(X,Y,W,H)=>{if(p.photo){try{doc.addImage(p.photo,/png/i.test(p.photo.slice(0,20))?'PNG':'JPEG',X*U,Y*U,W*U,H*U);return}catch(x){}}
+    rect(X,Y,W,H,[233,237,243]);doc.setFillColor(195,203,216);doc.circle((X+W/2)*U,(Y+H*.38)*U,W*.2*U,'F');doc.roundedRect((X+W*.12)*U,(Y+H*.68)*U,W*.76*U,H*.32*U,W*.3*U,W*.3*U,'F');doc.rect((X+W*.12)*U,(Y+H*.86)*U,W*.76*U,H*.14*U,'F')};
+  const fork=(X,Y,Sz)=>{rect(X,Y,Sz,Sz,[255,255,255],1);doc.setDrawColor(0,0,0);const l=(a,b,d,f,w)=>{doc.setLineWidth(w*Sz*U);doc.line((X+a*Sz)*U,(Y+b*Sz)*U,(X+d*Sz)*U,(Y+f*Sz)*U)};
+    l(.38,.2,.38,.8,.07);l(.3,.2,.3,.42,.045);l(.46,.2,.46,.42,.045);l(.3,.42,.46,.42,.045);l(.64,.2,.64,.8,.07);l(.67,.2,.67,.5,.12)};
+  const bar=()=>{rect(2,38.4,28.5,5.4,rgb(T.bar));e.p.forEach((x,i)=>txt(x.c,2+28.5*(i+.5)/e.p.length,42.3,3.3,{al:'center',col:[255,255,255]}))};
+  if(back){
+    photo(2,2,6.2,7.8);txt((p.ln+', '+p.fn).toUpperCase(),9.5,4.4,1.25,{b:1,max:21});txt(c.l,9.5,5.8,.95,{b:1,max:21});txt(p.id,9.5,8.1,.95,{b:1});
+    if(T.showLeg){let y=10.9;
+      if(T.showZ)e.z.forEach((z,i)=>{const Y=y+i*1.78;rect(2,Y,2.5,1.25,z.o?[255,255,255]:[0,0,0],1);txt(z.c,3.25,Y+.95,.9,{b:1,al:'center',col:z.o?[0,0,0]:[255,255,255]});txt(z.n,5.1,Y+.88,.74,{max:11.2})});
+      let r=0;e.p.forEach(x=>{const Y=y+r++*1.78;rect(16.75,Y,1.35,1.35,[255,255,255],1);txt(x.c,17.42,Y+1,.9,{b:1,al:'center'});txt(x.n,18.8,Y+.93,.74,{max:11.6})});
+      let Y=y+r++*1.78;rect(16.75,Y,1.35,1.35,rgb(T.bar));txt(T.gen,18.8,Y+.93,.74,{max:11.6});
+      if(T.showM&&e.m){Y=y+r++*1.78;fork(16.75,Y,1.35);txt('Restauration',18.8,Y+.93,.74)}}
+    bar();return}
+  photo(2,2,11.6,14.6);
+  if(T.showEv){txt(T.ev.toUpperCase(),30.5,2.95,.95,{b:1,al:'right',max:15});txt(T.sub,30.5,4.05,.8,{al:'right',col:[85,85,85],max:15})}
+  rect(15.2,13.44,15.3,3.16,rgb(c.col));txt(c.b,22.85,15.55,1.55,{b:1,al:'center',col:[255,255,255],max:14.5});
+  txt(p.fn+' '+p.ln.toUpperCase(),2,19.55,1.75,{max:28.5});txt(c.l,2,21.05,.98,{b:1,max:28.5});txt([p.fct,p.org].filter(Boolean).join(' · '),2,22.25,.98,{max:28.5});
+  if(T.showM&&e.m)fork(8.6,28,2.6);
+  txt(p.id,24.5,24.45,.92,{b:1});
+  try{const q=qrcode(0,'M');q.addData(String(p.id));q.make();const n=q.getModuleCount(),k=6/n;doc.setFillColor(0,0,0);for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(q.isDark(y,x))doc.rect((24.5+x*k)*U,(24.8+y*k)*U,k*U+.02,k*U+.02,'F')}catch(x){rect(24.5,24.8,6,6,null,1)}
+  if(T.showZ)e.z.forEach((z,i)=>{const X=2+(i%5)*5.94,Y=32.4+Math.floor(i/5)*3.24;rect(X,Y,4.44,2.24,z.o?[255,255,255]:[0,0,0],1);txt(z.c,X+2.22,Y+1.66,1.5,{b:1,al:'center',col:z.o?[0,0,0]:[255,255,255]})});
+  bar();
+}
+function makePdf(ps){const doc=new window.jspdf.jsPDF({unit:'mm',format:'a5',orientation:'portrait'});
+  ps.forEach((p,i)=>{if(i)doc.addPage();pdfBadge(doc,p,0);doc.addPage();pdfBadge(doc,p,1)});return doc}
+function savePdf(ps){if(!ps||!ps.length)return;try{const n=ps.length===1?'accreditation_'+ps[0].id:'accreditations_'+ps.length+'_'+new Date().toISOString().slice(0,10);makePdf(ps).save(n+'.pdf');toast('PDF téléchargé : '+n+'.pdf')}
+  catch(e){console.error(e);toast('PDF indisponible : le générateur n\'a pas pu être chargé')}}
+
+/* ============ Invitations (lien d'inscription individuel) ============ */
+function copyTxt(t){navigator.clipboard.writeText(t).then(()=>toast('Copié'),()=>toast('Copie impossible : sélectionnez le texte puis Ctrl+C'))}
+async function flushNow(){if(TMR){clearTimeout(TMR);flush()}await SYNC}
+V.inv=()=>{
+  const L=S.invs||[];
+  return `<div class="note">Une invitation crée un <b>lien personnel</b>. La personne y renseigne uniquement son nom, son prénom, son adresse, son numéro de téléphone, sa photo et sa fonction, sans compte ni mot de passe. Le dossier arrive ensuite dans « Revue des données ».</div>
+  <div class="kpis">${[['Invitations',L.length],['Dossiers déposés',L.filter(i=>i.done).length],['En attente',L.filter(i=>!i.done).length]].map(x=>`<div class="kpi" style="cursor:default"><small>${x[0]}</small><b class="num">${x[1]}</b></div>`).join('')}</div>
+  <div class="card"><div class="card-h"><h3>Liens envoyés</h3><span class="sp"></span>${can('edit')?`<button class="btn p" onclick="invNew('')">Nouvelle invitation</button>`:''}</div>
+  <div class="tw"><table class="t"><thead><tr><th>E-mail</th><th>Catégorie</th><th>Organisation</th><th>Créée par</th><th>Dernier envoi</th><th>État</th><th></th></tr></thead><tbody>
+  ${L.map(i=>`<tr${i.pid&&P(i.pid)?` class="row" onclick="openP('${i.pid}')"`:''}><td><b>${esc(i.email)}</b></td><td>${esc(cat(i.cat).l)}</td><td>${esc(i.org)}</td><td>${esc(i.by)}</td><td class="num">${fmtT(i.t)}</td>
+   <td>${i.done?'<span class="pill s-APP">Dossier déposé</span>':'<span class="pill s-PEND">En attente</span>'}</td><td class="r" onclick="event.stopPropagation()">${can('edit')?`<button class="btn sm" onclick="invSend({resend:${i.id}})">Nouveau lien</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Aucune invitation pour le moment.</td></tr>'}</tbody></table></div></div>`;
+};
+function invNew(defCat){modal('Inviter par lien personnel',`<div class="form">
+  <div class="fld full"><label for="i-em">Adresses e-mail (une par ligne, 50 maximum)</label><textarea class="inp" id="i-em" placeholder="prenom.nom@exemple.com"></textarea></div>
+  <div class="fld"><label for="i-cat">Catégorie</label><select class="inp" id="i-cat">${opt(S.cats.map(c=>[c.c,c.l]),defCat||S.cats[0].c)}</select></div>
+  <div class="fld"><label for="i-org">Organisation</label><input class="inp" id="i-org" list="i-orgs" value="${can('admin')?'':esc(me().org)}"><datalist id="i-orgs">${[...new Set(S.persons.map(x=>x.org))].sort().map(o=>`<option value="${esc(o)}">`).join('')}</datalist></div></div>
+  <p style="font-size:12px;color:var(--ink3);margin:10px 0 0">Chaque personne reçoit son propre lien. La catégorie et l'organisation sont fixées ici et ne sont pas modifiables par la personne.</p>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" id="i-go" onclick="invSend({emails:$('#i-em').value.split(/[\\n,;]+/).map(x=>x.trim()).filter(Boolean),cat:$('#i-cat').value,org:$('#i-org').value.trim()})">Créer et envoyer</button>`)}
+async function invSend(body){
+  const b=$('#i-go');if(b)b.disabled=true;await flushNow();
+  let r;try{r=await api('/api/invite',body)}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
+  if(b)b.disabled=false;if(!r.ok){toast(r.j.error||'Erreur');return}
+  closeAll();await reload();const R=r.j.results,ko=R.filter(x=>!x.sent);
+  modal(`Invitation${R.length>1?'s':''} créée${R.length>1?'s':''}`,`${ko.length?`<div class="note w"><b>${ko.length===R.length?'Aucun e-mail n\'a été envoyé automatiquement.':ko.length+' e-mail(s) non envoyé(s).'}</b> ${esc(ko[0].reason)} Copiez le lien et transmettez-le vous-même (e-mail, WhatsApp, SMS).</div>`:`<div class="note">E-mail${R.length>1?'s':''} envoyé${R.length>1?'s':''}. Le lien reste copiable ci-dessous.</div>`}
+   ${R.map((x,i)=>`<div><b>${esc(x.email)}</b> ${x.sent?'<span class="chip" style="background:var(--ok-bg);color:var(--ok)">envoyé</span>':'<span class="chip w">à transmettre</span>'}<div class="lnk"><input class="inp" readonly value="${esc(x.link)}" onfocus="this.select()" aria-label="Lien pour ${esc(x.email)}"><button class="btn sm" onclick="copyTxt(INVR[${i}].link)">Copier le lien</button>${x.sent?'':`<button class="btn sm" onclick="copyTxt(INVR[${i}].text)">Copier le message</button>`}</div></div>`).join('')}`,
+  `<button class="btn p" onclick="closeOv(this)">Terminé</button>`,1);INVR=R;
+}
+let INVR=[];
+
+/* ============ Notification d'un dossier incomplet ============ */
+function notifyAsk(id){const p=P(id);modal('Signaler le dossier incomplet',`<p style="margin:0 0 10px">Dossier de <b>${esc(nm(p))}</b>. Le message liste les points à régulariser :</p><div style="margin-bottom:14px">${issChips(p)}${p.note?`<div style="margin-top:6px;color:var(--ink2)">Commentaire : ${esc(p.note)}</div>`:''}</div>
+  <div class="fld"><label for="n-t">Destinataire</label><select class="inp" id="n-t">${opt([['person','La personne'+(p.email?' — '+p.email:' — aucune adresse enregistrée')],['org','Le représentant de l\'organisation — '+p.org]],p.email?'person':'org')}</select></div>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="doNotify('${id}',$('#n-t').value)">Envoyer</button>`)}
+async function doNotify(id,target){
+  await flushNow();let r;try{r=await api('/api/notify',{pid:id,target})}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
+  if(!r.ok){toast(r.j.error||'Notification impossible');return}
+  closeAll();await reload();const j=r.j;NOTR=j;
+  if(j.sent){toast('E-mail envoyé à '+j.to.join(', '));return}
+  modal('Message prêt, non envoyé automatiquement',`<div class="note w">${esc(j.reason)} Copiez le message et envoyez-le depuis votre messagerie.</div>
+   <dl class="dl"><dt>Destinataire</dt><dd>${esc(j.to.join(', '))}</dd><dt>Objet</dt><dd>${esc(j.subject)}</dd></dl><textarea class="inp" readonly style="min-height:210px;margin-top:10px">${esc(j.text)}</textarea>`,
+  `<button class="btn" onclick="copyTxt(NOTR.to.join(', '))">Copier l'adresse</button><button class="btn" onclick="copyTxt(NOTR.text)">Copier le message</button><button class="btn p" onclick="closeOv(this)">Fermer</button>`,1);
+}
+let NOTR=null;
+
+/* ============ Formulaire public (lien d'invitation) ============ */
+let FT='',FPH='';
+const pubBox=h=>{$('#login').hidden=true;$('#app').hidden=true;const b=$('#pub');b.hidden=false;b.innerHTML=`<div class="login"><div class="brand" style="padding:0 0 6px"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Demande d'accréditation</span></div></div>${h}</div>`};
+async function showForm(token){
+  FT=token;FPH='';pubBox('<p style="margin:0;color:var(--ink2)">Chargement…</p>');
+  let r;try{r=await api('/api/form?t='+encodeURIComponent(token))}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
+  if(!r.ok){pubBox(`<h2>Lien non valide</h2><p style="margin:0;color:var(--ink2)">${esc(r.j.error||'Ce lien ne fonctionne pas.')} Demandez un nouveau lien à votre organisation.</p>`);return}
+  const d=r.j,p=d.person||{ln:'',fn:'',addr:'',tel:'',fct:'',photo:''};
+  const head=`<h2>${esc(d.event)}</h2><p style="margin:0;color:var(--ink2)">${esc(d.category)} · ${esc(d.org)}<br><span style="font-size:12px;color:var(--ink3)">${esc(d.email)}</span></p>`;
+  if(!d.editable){pubBox(head+`<div class="note" style="margin:6px 0 0">Votre dossier a bien été reçu et est en cours de traitement (${esc(ST[d.status]||d.status)}). Il ne peut plus être modifié en ligne.</div>`);return}
+  pubBox(head+`${d.note?`<div class="note w" style="margin:0"><b>À corriger :</b> ${esc(d.note)}</div>`:d.person?'<div class="note" style="margin:0">Votre dossier est déjà déposé. Vous pouvez encore le corriger ci-dessous.</div>':''}
+  <form onsubmit="sendForm(event)" style="display:flex;flex-direction:column;gap:12px"><div class="form">
+   <div class="fld"><label for="p-ln">Nom</label><input class="inp" id="p-ln" required maxlength="80" autocomplete="family-name" value="${esc(p.ln)}"></div>
+   <div class="fld"><label for="p-fn">Prénom</label><input class="inp" id="p-fn" required maxlength="80" autocomplete="given-name" value="${esc(p.fn)}"></div>
+   <div class="fld full"><label for="p-addr">Adresse</label><input class="inp" id="p-addr" required maxlength="200" autocomplete="street-address" value="${esc(p.addr)}"></div>
+   <div class="fld"><label for="p-tel">Numéro de téléphone</label><input class="inp" id="p-tel" type="tel" required maxlength="40" autocomplete="tel" placeholder="+221 77 000 00 00" value="${esc(p.tel)}"></div>
+   <div class="fld"><label for="p-fct">Fonction</label><input class="inp" id="p-fct" required maxlength="120" value="${esc(p.fct)}"></div>
+   <div class="fld full"><label for="p-ph">Photo d'identité (visage de face, fond clair)</label><div class="pub-ph">${p.photo?`<img id="p-prev" src="${p.photo}" alt="Photo actuelle">`:'<img id="p-prev" alt="" hidden><div class="ph0" id="p-ph0"></div>'}<input class="inp" id="p-ph" type="file" accept="image/*" onchange="formPh(this)" style="flex:1"></div></div></div>
+   <p id="p-err" role="alert" style="margin:0;min-height:18px;color:var(--bad);font-size:12.5px;font-weight:500"></p>
+   <button class="btn p" id="p-btn" type="submit" style="justify-content:center;padding:10px">${d.person?'Mettre à jour mon dossier':'Envoyer ma demande'}</button></form>`);
+  FHAS=!!p.photo;
+}
+let FHAS=false;
+function formPh(inp){const f=inp.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=348;c.height=438;const k=Math.max(348/im.width,438/im.height),w=im.width*k,h=im.height*k;c.getContext('2d').drawImage(im,(348-w)/2,(438-h)/2,w,h);FPH=c.toDataURL('image/jpeg',.82);const pv=$('#p-prev');pv.src=FPH;pv.hidden=false;const z=$('#p-ph0');if(z)z.remove()};im.onerror=()=>{$('#p-err').textContent='Image illisible : choisissez un fichier JPG ou PNG.'};im.src=rd.result};rd.readAsDataURL(f)}
+async function sendForm(ev){ev.preventDefault();const e=$('#p-err'),b=$('#p-btn');e.textContent='';
+  if(!FPH&&!FHAS){e.textContent='Ajoutez votre photo d\'identité.';return}
+  b.disabled=true;let r;try{r=await api('/api/form',{t:FT,ln:$('#p-ln').value,fn:$('#p-fn').value,addr:$('#p-addr').value,tel:$('#p-tel').value,fct:$('#p-fct').value,photo:FPH})}catch(x){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
+  b.disabled=false;if(!r.ok){e.textContent=r.j.error||'Envoi impossible.';return}
+  pubBox('<h2>Demande transmise</h2><p style="margin:0;color:var(--ink2)">Merci. Votre dossier a bien été reçu par le service accréditation. Vous serez contacté(e) si un élément manque. Vous pouvez fermer cette page.</p>');
+}
+
 /* ============ Démarrage ============ */
-(async function(){const h=location.hash.slice(1);if(V[h])VIEW=h;try{await reload()}catch(e){showLogin('Serveur indisponible.')}})();
+(async function(){const inv=new URLSearchParams(location.search).get('inv');if(inv){showForm(inv);return}const h=location.hash.slice(1);if(V[h])VIEW=h;try{await reload()}catch(e){showLogin('Serveur indisponible.')}})();
 window.addEventListener('focus',()=>{if(S&&!TMR&&!$('#ovs').children.length&&Date.now()-LOADED>30000)SYNC.then(()=>{if(S&&!TMR&&!$('#ovs').children.length)reload()})});
 window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(V[h]&&h!==VIEW)go(h)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=$('#ovs').lastElementChild;if(o)o.remove()}});
