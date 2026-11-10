@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDAGE 2026 Accréditation</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@600;700;800&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#F3F7FD;--card:#FFFFFF;--line:#E0E8F5;--line2:#CBD8EE;
+  --ink:#0E1E3C;--ink2:#465773;--ink3:#7F8FAB;
+  --blue:#2563EB;--blue-d:#1D4ED8;--navy:#16306B;--sky:#EAF2FF;--sky2:#D7E6FF;--sky3:#F6FAFF;
+  --ok:#0F7B55;--ok-bg:#E6F6EF;--warn:#A85F00;--warn-bg:#FFF4DC;--bad:#C0262D;--bad-bg:#FDECEC;--vio:#5B3FC4;--vio-bg:#EFEBFD;--mute-bg:#EEF2F8;
+  --r:10px;--sh:0 1px 2px rgba(22,48,107,.05),0 4px 14px rgba(22,48,107,.05);
+  --f:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;--fd:'Inter Tight','Inter',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:13.5px/1.45 var(--f);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--fd);margin:0;letter-spacing:-.01em}
+a{color:var(--blue)}
+.num{font-variant-numeric:tabular-nums}
+
+/* Shell */
+.app{display:grid;grid-template-columns:252px 1fr;height:100%}
+.side{background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.brand{display:flex;align-items:center;gap:11px;padding:18px 18px 14px}
+.brand-m{width:36px;height:36px;border-radius:9px;background:var(--navy);color:#fff;display:grid;place-items:center;font:800 13px var(--fd);letter-spacing:.02em}
+.brand b{display:block;font:700 14.5px var(--fd)}
+.brand span{font-size:11px;color:var(--ink3)}
+.nav{flex:1;overflow-y:auto;padding:4px 10px 16px}
+.nav-g{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);padding:14px 10px 6px}
+.nav-i{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--ink2);font-weight:500;text-align:left}
+.nav-i svg{width:17px;height:17px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.nav-i:hover{background:var(--sky3);color:var(--ink)}
+.nav-i.on{background:var(--sky);color:var(--blue-d);font-weight:600}
+.nav-i .ct{margin-left:auto;font-size:11px;font-weight:600;background:var(--mute-bg);color:var(--ink2);border-radius:20px;padding:1px 7px}
+.nav-i .ct.hot{background:var(--warn-bg);color:var(--warn)}
+.side-f{border-top:1px solid var(--line);padding:12px 18px;font-size:11px;color:var(--ink3)}
+.wrap{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{background:var(--card);border-bottom:1px solid var(--line);padding:12px 26px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.top h1{font-size:18px}
+.top .sub{font-size:12px;color:var(--ink3)}
+.top .sp{flex:1}
+.btn.menu-b{display:none}
+.main{flex:1;overflow-y:auto;padding:22px 26px 40px}
+.sess{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2)}
+
+/* Bits */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh)}
+.card-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--line)}
+.card-h h3{font-size:14.5px}
+.card-h .sp{flex:1}
+.card-b{padding:16px 18px}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);cursor:pointer;text-align:left}
+.kpi:hover{border-color:var(--line2)}
+.kpi small{display:block;font-size:11.5px;color:var(--ink3);font-weight:500}
+.kpi b{display:block;font:700 26px/1.2 var(--fd);margin-top:4px}
+.kpi em{font-style:normal;font-size:11.5px;color:var(--ink2)}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line2);background:var(--card);border-radius:8px;padding:7px 12px;font-weight:600;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--sky3)}
+.btn.p{background:var(--blue);border-color:var(--blue);color:#fff}.btn.p:hover{background:var(--blue-d)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.bad{color:var(--bad);border-color:#F1C3C5}
+.btn.sm{padding:4px 9px;font-size:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.inp{border:1px solid var(--line2);border-radius:8px;padding:7px 10px;background:#fff;min-width:0;max-width:100%}
+.inp:focus{outline:2px solid var(--sky2);border-color:var(--blue)}
+textarea.inp{width:100%;min-height:84px;resize:vertical}
+.tb{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld label{font-size:11.5px;font-weight:600;color:var(--ink2)}
+.fld .inp{width:100%}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form .full{grid-column:1/-1}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:2px 9px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.s-DRAFT{background:var(--mute-bg);color:var(--ink2)}.s-SUB{background:var(--sky);color:var(--blue-d)}
+.s-RET{background:var(--warn-bg);color:var(--warn)}.s-APP{background:var(--ok-bg);color:var(--ok)}
+.s-REJ{background:var(--bad-bg);color:var(--bad)}.s-PRT{background:var(--vio-bg);color:var(--vio)}
+.s-DLV{background:#E3F4F7;color:#0B6B7E}.s-PEND{background:var(--warn-bg);color:var(--warn)}
+.s-OK{background:var(--ok-bg);color:var(--ok)}.s-NO{background:var(--bad-bg);color:var(--bad)}
+.chip{display:inline-block;border-radius:5px;padding:1px 6px;font-size:11px;font-weight:600;background:var(--mute-bg);color:var(--ink2);margin:1px 2px 1px 0}
+.chip.w{background:var(--warn-bg);color:var(--warn)}.chip.b{background:var(--bad-bg);color:var(--bad)}.chip.k{background:#111;color:#fff;font-family:ui-monospace,Menlo,monospace}.chip.x{background:var(--sky);color:var(--blue-d)}
+.cat-d{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+.tw{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+.t th{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);text-align:left;padding:9px 12px;background:var(--sky3);border-bottom:1px solid var(--line);white-space:nowrap}
+.t td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+.t tr:last-child td{border-bottom:0}
+.t tbody tr.row{cursor:pointer}.t tbody tr.row:hover{background:var(--sky3)}
+.t .c{text-align:center}.t .r{text-align:right}
+.t small{color:var(--ink3);display:block}
+.empty{padding:34px 18px;text-align:center;color:var(--ink3)}
+.pg{display:flex;align-items:center;gap:10px;padding:10px 18px;border-top:1px solid var(--line);font-size:12px;color:var(--ink2)}
+.bar-row{display:grid;grid-template-columns:170px 1fr 44px;gap:10px;align-items:center;padding:5px 0;font-size:12.5px}
+.bar-t{height:8px;border-radius:5px;background:var(--mute-bg);overflow:hidden}.bar-t i{display:block;height:100%;border-radius:5px;background:var(--blue)}
+.flow{display:flex;height:12px;border-radius:7px;overflow:hidden;background:var(--mute-bg);margin:6px 0 12px}
+.flow i{display:block;height:100%}
+.lg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--ink2)}
+.lg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.note{background:var(--sky);border:1px solid var(--sky2);color:var(--navy);border-radius:8px;padding:10px 14px;font-size:12.5px;margin-bottom:16px}
+.note.w{background:var(--warn-bg);border-color:#F3DDA7;color:#6B3D00}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{border:0;background:none;padding:7px 12px;border-radius:8px;font-weight:600;color:var(--ink2);cursor:pointer;font-size:12.5px}
+.tab.on{background:var(--sky);color:var(--blue-d)}
+.mx th,.mx td{text-align:center;padding:8px 6px}.mx th:first-child,.mx td:first-child{text-align:left;padding-left:14px}
+.mx input{width:16px;height:16px;accent-color:var(--blue)}
+.sw{width:26px;height:26px;border-radius:7px;border:2px solid #fff;box-shadow:0 0 0 1px var(--line2);cursor:pointer;padding:0}
+.sw.on{box-shadow:0 0 0 2px var(--blue)}
+.rep{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.rep button{text-align:left;border:1px solid var(--line);background:var(--card);border-radius:var(--r);padding:13px 15px;cursor:pointer}
+.rep button:hover,.rep button.on{border-color:var(--blue);background:var(--sky3)}
+.rep b{display:block;font:700 13.5px var(--fd)}.rep span{font-size:12px;color:var(--ink3)}
+
+/* Overlays */
+.ov{position:fixed;inset:0;background:rgba(14,30,60,.38);display:flex;z-index:50}
+.ov.m{align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--card);border-radius:14px;width:560px;max-width:100%;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(14,30,60,.25)}
+.modal.wide{width:900px}
+.modal-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.modal-h h3{font-size:16px;flex:1}
+.modal-b{padding:18px 20px;overflow-y:auto}
+.modal-f{padding:13px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.ov.d{justify-content:flex-end}
+.drawer{background:var(--card);width:560px;max-width:100%;height:100%;display:flex;flex-direction:column;box-shadow:-12px 0 40px rgba(14,30,60,.18)}
+.xb{border:0;background:var(--mute-bg);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;line-height:1}
+.dl{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:13px}.dl dt{color:var(--ink3)}.dl dd{margin:0;font-weight:500}
+.sec{font:700 11px var(--f);letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin:18px 0 8px}
+.hist{font-size:12.5px;border-left:2px solid var(--line);padding-left:12px;margin-left:4px}
+.hist div{padding:4px 0}.hist small{color:var(--ink3)}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:90;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+
+/* Accréditation (badge) : tout en em, mis à l'échelle par font-size */
+.bdg{font-size:var(--bs,9px);width:31em;height:46em;background:#fff;color:#000;padding:2em 2em 2.2em;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;line-height:1.2;flex:none;border:1px solid #D9DFEA}
+.bdg>*{flex:none}.bdg svg{display:block}
+.b-top{display:flex;gap:1.6em;height:14.6em}
+.b-ph{width:11.6em;height:14.6em;background:#EEF1F5;flex:none;overflow:hidden}
+.b-ph img,.b-ph svg{width:100%;height:100%;object-fit:cover}
+.b-tr{flex:1;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.b-ev{font-size:.95em;font-weight:700;letter-spacing:.06em;text-align:right;color:#222;text-transform:uppercase}
+.b-ev small{display:block;font-size:.85em;font-weight:400;letter-spacing:.02em;color:#555;text-transform:none}
+.b-ban{color:#fff;font-weight:700;font-size:1.55em;text-align:center;padding:.42em .3em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b-name{font-size:1.75em;margin-top:.75em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.b-fn{font-weight:700;font-size:.98em;margin-top:.15em}.b-org{font-size:.98em}
+.b-mid{display:flex;justify-content:space-between;align-items:flex-end;margin-top:1em;padding-left:6.6em;min-height:7.2em}
+.b-meal{width:2.6em;height:2.6em;border:.12em solid #000;display:grid;place-items:center;margin-bottom:.2em}
+.b-meal svg{width:1.5em;height:1.7em}
+.b-qr{width:6em;margin-left:auto}.b-qr b{display:block;font-size:.92em;margin-bottom:.25em;white-space:nowrap}
+.b-qr svg{width:6em;height:6em}
+.b-zones{display:flex;flex-wrap:wrap;gap:1em 1.4em;margin:1.6em 0 1.6em}
+.b-z{width:4.2em;height:2em;background:#000;color:#fff;font-weight:700;font-size:1em;display:grid;place-items:center;border:.12em solid #000;letter-spacing:.01em}
+.b-z span{font-size:1.5em;line-height:1}
+.b-z.o{background:#fff;color:#000}
+.bdg>.b-bar{margin-top:auto;height:5.4em;display:flex;align-items:center;justify-content:space-around;color:#fff;flex:none}
+.b-bar span{font-size:3.3em;line-height:1}
+.b-bk{display:flex;gap:1.3em}
+.b-bk .b-ph{width:6.2em;height:7.8em}
+.b-bk h4{margin:1.1em 0 0;font:900 1.25em Arial,Helvetica,sans-serif;text-transform:uppercase}
+.b-bk p{margin:.15em 0 0;font-weight:700;font-size:.95em}.b-bk p.i{margin-top:1.2em}
+.b-leg{display:grid;grid-template-columns:1fr 1fr;gap:0 1em;margin-top:1.1em;font-size:.72em}
+.b-leg>div{min-width:0}.b-leg>div>div{display:flex;align-items:center;gap:.7em;padding:.32em 0;min-width:0}
+.b-leg i{font-style:normal;font-weight:700;font-size:1.25em;display:grid;place-items:center;flex:none;width:2.7em;height:1.35em;background:#000;color:#fff;border:.1em solid #000}
+.b-leg i.o{background:#fff;color:#000}.b-leg i.n{width:1.5em;height:1.5em;background:#fff;color:#000}
+.b-leg i.c{width:1.5em;height:1.5em;border:0}.b-leg i.f{width:1.5em;height:1.5em;background:#fff}.b-leg i.f svg{width:.8em;height:1em}
+.pair{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;background:#DCE6F5;border-radius:var(--r);padding:22px}
+.pair .bdg{box-shadow:0 6px 22px rgba(14,30,60,.18)}
+#printarea{display:none}
+
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;inset:0 auto 0 0;width:262px;z-index:40;transform:translateX(-100%);transition:transform .2s;box-shadow:8px 0 30px rgba(14,30,60,.2)}
+  .app.nav-open .side{transform:none}
+  .btn.menu-b{display:inline-flex}
+  .top{padding:10px 16px}.main{padding:16px 16px 32px}
+  .g2,.g3,.form{grid-template-columns:1fr}
+  .bar-row{grid-template-columns:110px 1fr 36px}
+  .dl{grid-template-columns:110px 1fr}
+  .pair .bdg{font-size:7px}
+}
+@media print{
+  @page{size:A4 landscape;margin:8mm}
+  html,body{height:auto;background:#fff}
+  body>*:not(#printarea){display:none!important}
+  #printarea{display:block}
+  .sheet{display:flex;gap:10mm;justify-content:center;align-items:flex-start;page-break-after:always;break-after:page}
+  .sheet .bdg{font-size:3.1mm;border:.2mm dashed #999;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side">
+    <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-f">DG Groupe · v12<br>Jeu de données de démonstration</div>
+  </aside>
+  <div class="wrap">
+    <header class="top" id="top"></header>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+<div id="ovs"></div>
+<div id="printarea"></div>
+<div id="toast" hidden></div>
+<script>
+'use strict';
+/* ============ Référentiels ============ */
+const KEY='ndage_acr_v12';
+const ST={DRAFT:'Brouillon',SUB:'Soumis',RET:'À corriger',APP:'Approuvé',REJ:'Refusé',PRT:'Imprimé',DLV:'Remis'};
+const ST_COL={DRAFT:'#B8C3D6',SUB:'#2563EB',RET:'#E0A100',APP:'#0F9D6C',REJ:'#D0383F',PRT:'#6D4FD6',DLV:'#0E8FA6'};
+const RQ={PEND:'En attente',OK:'Accordé',NO:'Refusé'};
+const PERMS=[['view','Consulter les dossiers'],['edit','Créer / modifier'],['review','Valider / refuser'],['access','Décider des ajouts d\'accès'],['matrix','Modifier la matrice'],['print','Imprimer / remettre'],['export','Exporter les rapports'],['admin','Gérer utilisateurs & rôles']];
+const NAV=[
+ ['Pilotage',[['dash','Tableau de bord','grid']]],
+ ['Accréditation',[['dem','Demandes','file'],['revue','Revue des données','check'],['verif','Vérifications','shield']]],
+ ['Populations',[['ath','Athlètes & équipes','medal'],['fi','Fédérations internationales','globe'],['fn','Fédérations nationales','flag'],['staff','Staff','brief'],['media','Médias','mic'],['vol','Volontaires','heart']]],
+ ['Accès & privilèges',[['matrix','Matrice d\'accès','table'],['acces','Ajouts d\'accès','plus']]],
+ ['Production',[['tpl','Template d\'accréditation','card'],['print','Impression','printer']]],
+ ['Analyse',[['rep','Rapports & exports','chart']]],
+ ['Administration',[['users','Utilisateurs & rôles','users'],['audit','Journal d\'audit','clock']]]
+];
+const TITLES={};NAV.forEach(g=>g[1].forEach(i=>TITLES[i[0]]=i[1]));
+const IC={
+ grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+ file:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/>',
+ check:'<path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>',
+ shield:'<path d="M12 3l8 3v6c0 4.5-3.2 8-8 9-4.800-1-8-4.500-8-9V6z"/><path d="M9 12l2 2 4-4"/>',
+ medal:'<circle cx="12" cy="15" r="5"/><path d="M9 10.500 6 3h4l2 4 2-4h4l-3 7.500"/>',
+ globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.500 3 14.500 0 18M12 3c-3 3.500-3 14.500 0 18"/>',
+ flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+ brief:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18"/>',
+ mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+ heart:'<path d="M12 20s-7-4.500-7-10a4 4 0 0 1 7-2.500A4 4 0 0 1 19 10c0 5.500-7 10-7 10z"/>',
+ table:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/>',
+ plus:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>',
+ card:'<rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="9" r="2.500"/><path d="M8.500 15h7M8.500 18h4"/>',
+ printer:'<path d="M7 9V3h10v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><rect x="7" y="14" width="10" height="7"/>',
+ chart:'<path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/>',
+ users:'<circle cx="9" cy="8" r="3.500"/><path d="M2.500 20a6.500 6.500 0 0 1 13 0M16 4.500a3.500 3.500 0 0 1 0 7M18 14.500a6 6 0 0 1 3.500 5.500"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+};
+const ico=k=>`<svg viewBox="0 0 24 24">${IC[k]||''}</svg>`;
+const FORK='<svg viewBox="0 0 16 20"><path d="M3 1v5.500a2 2 0 0 0 1.500 1.900V19h1.500V8.400A2 2 0 0 0 7.500 6.500V1H6.300v5H5.600V1H4.400v5H3.700V1zM12.500 1c-1.700 0-2.500 2.200-2.500 4.500 0 2 .700 3.400 1.600 3.800V19h1.500V1z" fill="#000"/></svg>';
+const SIL='<svg viewBox="0 0 116 146"><rect width="116" height="146" fill="#E9EDF3"/><circle cx="58" cy="56" r="24" fill="#C3CBD8"/><path d="M12 146c2-30 22-46 46-46s44 16 46 46z" fill="#C3CBD8"/></svg>';
+
+/* ============ Utilitaires ============ */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtD=d=>d?d.split('-').reverse().join('/'):'—';
+const fmtT=t=>{const d=new Date(t);return d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})};
+const opt=(list,val,first)=>(first!=null?`<option value="">${first}</option>`:'')+list.map(o=>{const[v,l]=Array.isArray(o)?o:[o,o];return `<option value="${esc(v)}"${v===val?' selected':''}>${esc(l)}</option>`}).join('');
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* ============ Données de démonstration ============ */
+function seed(){
+  const r=rng(2026),pick=a=>a[Math.floor(r()*a.length)];
+  const cats=[
+   {c:'ATH',l:'Athlète',b:'ATHLÈTE',col:'#1D4ED8',pop:'ath'},
+   {c:'OFE',l:"Officiel d'équipe",b:'ÉQUIPE',col:'#0E7490',pop:'ath'},
+   {c:'CDM',l:'Chef de mission',b:'CHEF DE MISSION',col:'#5B3FC4',pop:'ath'},
+   {c:'FI',l:'Fédération internationale',b:'FÉD. INTERNATIONALE',col:'#B45309',pop:'fi'},
+   {c:'FN',l:'Fédération nationale',b:'FÉD. NATIONALE',col:'#047857',pop:'fn'},
+   {c:'STF',l:'Staff',b:'STAFF',col:'#E3000F',pop:'staff'},
+   {c:'MED',l:'Média',b:'PRESSE',col:'#BE185D',pop:'media'},
+   {c:'VOL',l:'Volontaire',b:'VOLONTAIRE',col:'#A16207',pop:'vol'}];
+  const zones=[
+   {c:'ALL',n:'Tous les sites de compétition'},{c:'CED',n:'Complexe Équestre de Diamniadio'},{c:'CID',n:'Complexe Iba Mar Diop'},
+   {c:'COR',n:'Corniche Ouest'},{c:'CTO',n:"Complexe Tour de l'Œuf"},{c:'DAR',n:'Dakar Arena'},{c:'DEX',n:'Dakar Expo Centre'},{c:'DHQ',n:'Siège – Dakar',o:1}];
+  const privs=[{c:'1',n:'Tribune officielle'},{c:'2',n:'Zones de préparation des athlètes'},{c:'3',n:'Zones presse / médias'},{c:'4',n:'Zones protocole & invités'},{c:'5',n:'Zone résidentielle (village)'}];
+  const matrix={
+   ATH:{z:['ALL'],p:['2','5'],m:1},OFE:{z:['ALL'],p:['2','5'],m:1},CDM:{z:['ALL'],p:['1','2','4','5'],m:1},
+   FI:{z:['ALL'],p:['1','2','4'],m:0},FN:{z:['ALL'],p:['1','2'],m:0},
+   STF:{z:zones.map(z=>z.c),p:['1','2','3','4','5'],m:1},MED:{z:['ALL'],p:['3'],m:0},VOL:{z:['DAR','DEX'],p:[],m:1}};
+  const LN=['Diallo','Ndiaye','Sarr','Fall','Diop','Ba','Sow','Gueye','Faye','Mbaye','Cissé','Kane','Sy','Thiam','Diagne','Seck','Camara','Traoré','Koné','Okafor','Mensah','Kamau','Martin','Dubois','Silva','Tanaka','Bennani','Haddad','Nkosi','Mwangi','Rossi','García','Müller','Smith','Lee'];
+  const FN_F=['Astou','Aïssatou','Fatou','Mariama','Khady','Awa','Coumba','Ndèye','Aminata','Rokhaya','Claire','Yuki','Amara','Leïla','Sofia','Grace','Zainab','Nadia'];
+  const FN_M=['Mamadou','Moussa','Ibrahima','Ousmane','Cheikh','Abdou','Babacar','Modou','Pape','Alioune','Lucas','Kenji','Kwame','Youssef','Mateo','David','Tunde','Karim'];
+  const CNO=['Sénégal','France','Kenya','Brésil','Japon','Maroc','Nigeria','Canada','Côte d\'Ivoire','Italie','Allemagne','Afrique du Sud','Espagne','Ghana'];
+  const SPORT=['Athlétisme','Natation','Basketball 3x3','Judo','Escrime','Lutte','Football','Handball','Taekwondo','Cyclisme','Équitation','Aviron'];
+  const ORG={
+   FI:['World Athletics','World Aquatics','FIBA','IJF','FIE','UWW','UCI','World Rowing','FEI','World Taekwondo'],
+   FN:['Féd. Sénégalaise d\'Athlétisme','Féd. Sénégalaise de Natation','Féd. Sénégalaise de Basketball','Féd. Sénégalaise de Judo','Féd. Sénégalaise de Lutte','Féd. Sénégalaise de Football','Féd. Sénégalaise d\'Escrime'],
+   STF:['Accréditation','Opérations sites','Logistique','Transport','Protocole','Technologie','Services médicaux','Communication'],
+   MED:['RTS','APS','Le Soleil','AFP','BBC Afrique','Canal+ Afrique','L\'Équipe','Reuters'],
+   VOL:['Pool Dakar','Pool Diamniadio','Pool Saly']};
+  const FCT={OFE:['Entraîneur','Entraîneur adjoint','Médecin d\'équipe','Kinésithérapeute','Chef d\'équipe'],CDM:['Chef de mission','Chef de mission adjoint'],
+   FI:['Délégué technique','Juge-arbitre','Officiel technique','Président de jury'],FN:['Officiel technique national','Secrétaire général','Directeur technique'],
+   STF:['Personnel','Coordinateur','Responsable de site','Superviseur','Agent d\'accueil'],MED:['Journaliste','Photographe','Cameraman','Commentateur'],
+   VOL:['Accueil','Orientation spectateurs','Assistance délégations','Support logistique']};
+  const plan=[['ATH',70],['OFE',22],['CDM',8],['FI',20],['FN',18],['STF',30],['MED',24],['VOL',48]];
+  const persons=[];let seq=210700;
+  for(const[c,n]of plan)for(let i=0;i<n;i++){
+    const sx=r()<.5?'F':'M',team=['ATH','OFE','CDM'].includes(c);
+    const x=r(),st=x<.10?'DLV':x<.28?'PRT':x<.55?'APP':x<.77?'SUB':x<.83?'RET':x<.86?'REJ':'DRAFT';
+    const early=['DRAFT','SUB','RET'].includes(st);
+    const y=c==='ATH'?2008+Math.floor(r()*4):1964+Math.floor(r()*40);
+    const p={id:(seq+=1+Math.floor(r()*37))+'-'+(10+Math.floor(r()*80)),ln:pick(LN),fn:pick(sx==='F'?FN_F:FN_M),sx,
+      dob:`${y}-${String(1+Math.floor(r()*12)).padStart(2,'0')}-${String(1+Math.floor(r()*28)).padStart(2,'0')}`,
+      cat:c,org:team?pick(CNO):pick(ORG[c]),fct:c==='ATH'?pick(SPORT):pick(FCT[c]),
+      nat:'',photo:'',hasPh:!(early&&r()<.3),doc:!(early&&r()<.2),
+      bg:early?(r()<.55?'PEND':r()<.06?'FLAG':'OK'):'OK',st,xz:[],xp:[],xm:0,note:''};
+    p.nat=team?p.org:c==='FI'||c==='MED'?pick(CNO):'Sénégal';
+    if(c==='ATH'&&early&&r()<.06)p.dob='2004'+p.dob.slice(4);
+    if(early&&r()<.05)p.dob='';
+    persons.push(p);
+  }
+  // deux doublons volontaires pour la revue
+  const d1=persons.find(p=>p.st==='SUB'&&p.cat==='VOL'),d2=persons.find(p=>p.st==='SUB'&&p.cat==='MED');
+  [d1,d2].forEach((s,i)=>{if(s)persons.push({...s,id:(seq+=11+i)+'-'+(31+i),st:'SUB',xz:[],xp:[]})});
+  const roles={Administrateur:PERMS.map(p=>p[0]),'Responsable ACR':['view','edit','review','access','matrix','print','export'],Validateur:['view','review','export'],
+   'Opérateur d\'impression':['view','print'],'Représentant d\'organisation':['view','edit'],'Lecture seule':['view']};
+  const users=[
+   {id:'u1',n:'Aïssatou Ndiaye',e:'a.ndiaye@ndage.example',role:'Administrateur',org:'DG Groupe',on:1},
+   {id:'u2',n:'Moussa Sarr',e:'m.sarr@ndage.example',role:'Responsable ACR',org:'Accréditation',on:1},
+   {id:'u3',n:'Fatou Diop',e:'f.diop@ndage.example',role:'Validateur',org:'Accréditation',on:1},
+   {id:'u4',n:'Ibrahima Fall',e:'i.fall@ndage.example',role:'Opérateur d\'impression',org:'Centre ACR',on:1},
+   {id:'u5',n:'Claire Martin',e:'c.martin@ndage.example',role:'Représentant d\'organisation',org:'France',on:1},
+   {id:'u6',n:'Ousmane Ba',e:'o.ba@ndage.example',role:'Lecture seule',org:'Direction',on:0}];
+  const appd=persons.filter(p=>['APP','PRT'].includes(p.st));
+  const mk=(i,type,code,motif,st)=>({id:'AA-'+String(i+1).padStart(3,'0'),pid:appd[i*7%appd.length].id,type,code,motif,by:pick(users).n,t:Date.now()-(i+1)*86400000*.8,st,dec:st==='PEND'?'':'Moussa Sarr'});
+  const reqs=[mk(0,'zone','DHQ','Réunions de coordination quotidiennes au siège','PEND'),mk(1,'priv','3','Interviews en zone mixte','PEND'),mk(2,'priv','1','Accompagnement d\'une délégation officielle','PEND'),
+   mk(3,'zone','CED','Renfort sur les épreuves équestres','PEND'),mk(4,'meal','','Présence sur site supérieure à 6 h','PEND'),mk(5,'priv','4','Mission protocole','OK'),
+   mk(6,'zone','DEX','Affectation modifiée','OK'),mk(7,'priv','5','Demande non justifiée par la fonction','NO')];
+  reqs.filter(q=>q.st==='OK').forEach(q=>{const p=persons.find(x=>x.id===q.pid);if(q.type==='zone')p.xz.push(q.code);else if(q.type==='priv')p.xp.push(q.code)});
+  const audit=[['Moussa Sarr','Matrice d\'accès','Privilège 4 ajouté à la catégorie Chef de mission'],['Fatou Diop','Revue','Lot de 14 dossiers approuvés'],['Ibrahima Fall','Impression','Lot de 22 accréditations imprimé'],
+   ['Aïssatou Ndiaye','Utilisateurs','Compte Ousmane Ba désactivé'],['Claire Martin','Dossiers','Import de 9 dossiers (France)'],['Moussa Sarr','Ajouts d\'accès','Demande AA-008 refusée']]
+   .map((a,i)=>({t:Date.now()-(i+1)*5.3e6,u:a[0],a:a[1],d:a[2],pid:''}));
+  return{cats,zones,privs,matrix,persons,roles,users,reqs,audit,me:'u1',
+   tpl:{bar:'#15803D',ev:'NDAGE 2026',sub:'Dakar · Sénégal',showEv:1,showZ:1,showM:1,showLeg:1,gen:'Zones de circulation générale'}};
+}
+
+/* ============ État ============ */
+let S,VIEW='dash',F={q:'',cat:'',st:'',org:'',page:1},SEL=new Set(),UI={rule:'',rep:'cat',rq:'PEND',tplP:'',pt:'APP',aq:''};
+function load(){try{const j=localStorage.getItem(KEY);if(j){S=JSON.parse(j);if(S&&S.persons&&S.tpl)return}}catch(e){}S=seed()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){try{const c=JSON.parse(JSON.stringify(S));c.persons.forEach(p=>p.photo='');localStorage.setItem(KEY,JSON.stringify(c))}catch(e2){}}}
+const me=()=>S.users.find(u=>u.id===S.me)||S.users[0];
+const can=k=>(S.roles[me().role]||[]).includes(k);
+const P=id=>S.persons.find(p=>p.id===id);
+const cat=c=>S.cats.find(x=>x.c===c)||{c,l:c,b:c,col:'#555',pop:''};
+const nm=p=>p?`${p.fn} ${p.ln.toUpperCase()}`:'—';
+function log(a,d,pid){S.audit.unshift({t:Date.now(),u:me().n,a,d,pid:pid||''});if(S.audit.length>600)S.audit.length=600;save()}
+function eff(p){const m=S.matrix[p.cat]||{z:[],p:[],m:0};
+  return{z:S.zones.filter(z=>m.z.includes(z.c)||p.xz.includes(z.c)),p:S.privs.filter(x=>m.p.includes(x.c)||p.xp.includes(x.c)),m:!!(m.m||p.xm)}}
+function age(dob){if(!dob)return null;const d=new Date(dob),r=new Date('2026-12-31');return r.getFullYear()-d.getFullYear()}
+let DUP=null;
+function dupes(){if(DUP)return DUP;const m={};S.persons.forEach(p=>{if(p.st==='REJ')return;const k=(p.ln+'|'+p.fn+'|'+p.dob).toLowerCase();(m[k]=m[k]||[]).push(p.id)});
+  DUP=new Set();Object.values(m).forEach(a=>{if(a.length>1)a.forEach(i=>DUP.add(i))});return DUP}
+const RULES=[['photo','Photo manquante',1],['doc','Pièce d\'identité non fournie',1],['dob','Date de naissance manquante',1],['age','Âge hors limites (athlète)',1],['dup','Doublon possible',0],['bgp','Vérification en attente',0],['bgf','Vérification signalée',1],['fct','Fonction non renseignée',0]];
+function issues(p){const r=[];if(!p.hasPh&&!p.photo)r.push('photo');if(!p.doc)r.push('doc');if(!p.dob)r.push('dob');
+  const a=age(p.dob);if(p.cat==='ATH'&&a!=null&&(a<15||a>18))r.push('age');if(dupes().has(p.id))r.push('dup');
+  if(p.bg==='PEND')r.push('bgp');if(p.bg==='FLAG')r.push('bgf');if(!p.fct)r.push('fct');return r}
+const rule=k=>RULES.find(r=>r[0]===k);
+const blocking=p=>issues(p).filter(k=>rule(k)[2]);
+const issChips=p=>issues(p).map(k=>`<span class="chip ${rule(k)[2]?'b':'w'}">${rule(k)[1]}</span>`).join('')||'<span class="chip" style="background:var(--ok-bg);color:var(--ok)">Conforme</span>';
+const pill=(s,map)=>`<span class="pill s-${s}">${(map||ST)[s]||s}</span>`;
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,3200)}
+function csv(rows){return rows.map(r=>r.map(v=>{v=String(v??'');return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(';')).join('\n')}
+
+/* ============ Overlays ============ */
+function modal(title,body,foot,wide){$('#ovs').insertAdjacentHTML('beforeend',`<div class="ov m" onclick="if(event.target===this)closeOv(this)"><div class="modal${wide?' wide':''}"><div class="modal-h"><h3>${title}</h3><button class="xb" onclick="closeOv(this)" aria-label="Fermer">×</button></div><div class="modal-b">${body}</div>${foot?`<div class="modal-f">${foot}</div>`:''}</div></div>`)}
+function drawer(html){closeAll();$('#ovs').insertAdjacentHTML('beforeend',`<div class="ov d" onclick="if(event.target===this)closeOv(this)"><div class="drawer">${html}</div></div>`)}
+function closeOv(el){(el.closest?el.closest('.ov'):el).remove()}
+function closeAll(){$('#ovs').innerHTML=''}
+function exportFile(name,text){
+  EXP={name,text};
+  modal('Export – '+esc(name),`<p style="margin:0 0 10px;color:var(--ink2)">${text.split('\n').length-1} ligne(s). Téléchargez le fichier, ou copiez son contenu si le téléchargement est bloqué par votre navigateur.</p><textarea class="inp" id="exp-t" readonly style="min-height:220px;font:12px ui-monospace,Menlo,monospace;white-space:pre">${esc(text.slice(0,60000))}</textarea>`,
+  `<button class="btn" onclick="copyExp()">Copier</button><button class="btn p" onclick="dlExp()">Télécharger</button>`,1);
+  log('Export',name);
+}
+let EXP=null;
+function dlExp(){try{const b=new Blob(['﻿'+EXP.text],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=EXP.name;document.body.appendChild(a);a.click();a.remove();toast('Téléchargement lancé : '+EXP.name)}catch(e){toast('Téléchargement indisponible ici, utilisez Copier')}}
+function copyExp(){const t=$('#exp-t');navigator.clipboard.writeText(EXP.text).then(()=>toast('Contenu copié'),()=>{t.select();toast('Sélectionné : faites Ctrl+C')})}
+/* ============ Shell ============ */
+const V={};
+function go(v,keep){VIEW=v;if(!keep)F={q:'',cat:'',st:'',org:'',page:1};SEL.clear();$('#app').classList.remove('nav-open');render();$('#main').scrollTop=0;try{history.replaceState(null,'','#'+v)}catch(e){}}
+function count(v){const n=S.persons;switch(v){
+  case'revue':return n.filter(p=>p.st==='SUB').length;case'verif':return n.filter(p=>p.bg!=='OK'&&p.st!=='REJ').length;
+  case'acces':return S.reqs.filter(q=>q.st==='PEND').length;case'print':return n.filter(p=>p.st==='APP').length}return null}
+function render(){
+  DUP=null;
+  const ae=document.activeElement,fid=ae&&ae.id,pos=ae&&ae.selectionStart;
+  $('#nav').innerHTML=NAV.map(g=>`<div class="nav-g">${g[0]}</div>`+g[1].map(i=>{const c=count(i[0]);return `<button class="nav-i${VIEW===i[0]?' on':''}" onclick="go('${i[0]}')">${ico(i[2])}<span>${i[1]}</span>${c?`<span class="ct hot num">${c}</span>`:''}</button>`}).join('')).join('');
+  const u=me();
+  $('#top').innerHTML=`<button class="btn menu-b" onclick="$('#app').classList.toggle('nav-open')">Menu</button><div><h1>${TITLES[VIEW]}</h1></div><span class="sp"></span>
+   <div class="sess"><span>Session</span><select class="inp" onchange="S.me=this.value;save();render();toast('Session : '+me().n+' ('+me().role+')')">${opt(S.users.filter(x=>x.on).map(x=>[x.id,x.n+' — '+x.role]),u.id)}</select></div>`;
+  $('#main').innerHTML=can('view')?V[VIEW]():'<div class="card empty">Votre rôle ne permet pas de consulter cette page.</div>';
+  if(fid){const e=document.getElementById(fid);if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(x){}}}
+}
+
+/* ============ Tableau de bord ============ */
+V.dash=()=>{
+  const n=S.persons,by=k=>n.filter(p=>p.st===k).length,tot=n.length;
+  const anom=n.filter(p=>!['REJ'].includes(p.st)&&blocking(p).length).length;
+  const k=(l,v,s,to)=>`<button class="kpi" onclick="${to}"><small>${l}</small><b class="num">${v}</b><em>${s}</em></button>`;
+  const ord=['DRAFT','SUB','RET','APP','PRT','DLV','REJ'];
+  const todo=n.filter(p=>p.st==='SUB').slice(0,6);
+  return `<div class="kpis">
+   ${k('Dossiers',tot,S.cats.length+' catégories',"go('dem')")}
+   ${k('En attente de revue',by('SUB'),by('RET')+' à corriger',"go('revue')")}
+   ${k('Approuvés',by('APP'),'prêts à imprimer',"go('print')")}
+   ${k('Imprimés / remis',by('PRT')+by('DLV'),by('DLV')+' remis',"UI.pt='PRT';go('print')")}
+   ${k('Ajouts d\'accès',S.reqs.filter(q=>q.st==='PEND').length,'demandes en attente',"go('acces')")}
+   ${k('Anomalies bloquantes',anom,'dossiers concernés',"go('revue')")}
+  </div>
+  <div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Avancement des dossiers</h3></div><div class="card-b">
+   <div class="flow">${ord.map(s=>`<i style="width:${by(s)/tot*100}%;background:${ST_COL[s]}" title="${ST[s]} : ${by(s)}"></i>`).join('')}</div>
+   <div class="lg">${ord.map(s=>`<span><i style="background:${ST_COL[s]}"></i>${ST[s]} <b class="num">${by(s)}</b></span>`).join('')}</div></div></div>
+  <div class="grid g2">
+   <div class="card"><div class="card-h"><h3>Par catégorie</h3></div><div class="card-b">${S.cats.map(c=>{const a=n.filter(p=>p.cat===c.c),ok=a.filter(p=>['APP','PRT','DLV'].includes(p.st)).length;
+     return `<div class="bar-row"><span><i class="cat-d" style="background:${c.col}"></i>${esc(c.l)}</span><div class="bar-t" title="${ok} approuvés sur ${a.length}"><i style="width:${a.length?ok/a.length*100:0}%"></i></div><b class="num r">${ok}/${a.length}</b></div>`}).join('')}
+     <p style="margin:10px 0 0;font-size:12px;color:var(--ink3)">Part des dossiers approuvés, imprimés ou remis.</p></div></div>
+   <div class="card"><div class="card-h"><h3>À traiter en priorité</h3><span class="sp"></span><button class="btn sm" onclick="go('revue')">Ouvrir la revue</button></div>
+    <div class="tw"><table class="t"><tbody>${todo.map(p=>`<tr class="row" onclick="openP('${p.id}')"><td><b>${esc(nm(p))}</b><small>${esc(cat(p.cat).l)} · ${esc(p.org)}</small></td><td>${issChips(p)}</td></tr>`).join('')||'<tr><td class="empty">Aucun dossier en attente.</td></tr>'}</tbody></table></div></div>
+   <div class="card" style="grid-column:1/-1"><div class="card-h"><h3>Activité récente</h3><span class="sp"></span><button class="btn sm" onclick="go('audit')">Journal complet</button></div>
+    <div class="tw"><table class="t"><tbody>${S.audit.slice(0,7).map(a=>`<tr><td class="num" style="white-space:nowrap;color:var(--ink3)">${fmtT(a.t)}</td><td>${esc(a.u)}</td><td><span class="chip x">${esc(a.a)}</span></td><td>${esc(a.d)}</td></tr>`).join('')}</tbody></table></div></div>
+  </div>`;
+};
+
+/* ============ Registre (demandes + populations) ============ */
+let CUR=[];
+function reg(pop,intro){
+  const cs=S.cats.filter(c=>!pop||c.pop===pop),codes=cs.map(c=>c.c);
+  const base=S.persons.filter(p=>codes.includes(p.cat)),orgs=[...new Set(base.map(p=>p.org))].sort();
+  const q=F.q.toLowerCase();
+  const rows=base.filter(p=>(!q||(p.ln+' '+p.fn+' '+p.id+' '+p.org+' '+p.fct).toLowerCase().includes(q))&&(!F.cat||p.cat===F.cat)&&(!F.st||p.st===F.st)&&(!F.org||p.org===F.org));
+  CUR=rows;const pages=Math.max(1,Math.ceil(rows.length/25));F.page=Math.min(F.page,pages);const pg=rows.slice((F.page-1)*25,F.page*25);
+  const all=pg.length&&pg.every(p=>SEL.has(p.id));
+  const sum=pop?`<div class="kpis">${[['Dossiers',base.length],['En revue',base.filter(p=>p.st==='SUB').length],['Approuvés',base.filter(p=>p.st==='APP').length],['Imprimés / remis',base.filter(p=>['PRT','DLV'].includes(p.st)).length],['Organisations',orgs.length]].map(x=>`<div class="kpi" style="cursor:default"><small>${x[0]}</small><b class="num">${x[1]}</b></div>`).join('')}</div>`:'';
+  return `${intro||''}${sum}<div class="card"><div class="card-h"><div class="tb" style="flex:1">
+    <input class="inp" id="f-q" placeholder="Nom, n° de dossier, organisation…" value="${esc(F.q)}" oninput="F.q=this.value;F.page=1;render()" style="width:250px">
+    ${cs.length>1?`<select class="inp" onchange="F.cat=this.value;F.page=1;render()">${opt(cs.map(c=>[c.c,c.l]),F.cat,'Toutes catégories')}</select>`:''}
+    <select class="inp" onchange="F.st=this.value;F.page=1;render()">${opt(Object.entries(ST),F.st,'Tous statuts')}</select>
+    <select class="inp" onchange="F.org=this.value;F.page=1;render()" style="max-width:210px">${opt(orgs,F.org,'Toutes organisations')}</select></div>
+    <div class="tb">${can('export')?`<button class="btn" onclick="exportCur()">Exporter (${rows.length})</button>`:''}${can('edit')?`<button class="btn" onclick="importCSV()">Import en masse</button><button class="btn p" onclick="editP('','${cs[0].c}')">Nouveau dossier</button>`:''}</div></div>
+   ${SEL.size?`<div class="card-h" style="background:var(--sky3)"><b>${SEL.size} sélectionné(s)</b><span class="sp"></span>
+     ${can('edit')?`<button class="btn sm" onclick="bulk('SUB')">Soumettre</button>`:''}${can('review')?`<button class="btn sm" onclick="bulk('APP')">Approuver</button>`:''}${can('print')?`<button class="btn sm" onclick="printIds([...SEL])">Imprimer</button>`:''}<button class="btn sm" onclick="SEL.clear();render()">Annuler</button></div>`:''}
+   <div class="tw"><table class="t"><thead><tr><th class="c"><input type="checkbox" ${all?'checked':''} onchange="selPage(this.checked)" aria-label="Tout sélectionner"></th><th>N° dossier</th><th>Titulaire</th><th>Catégorie</th><th>Organisation</th><th>Fonction</th><th>Contrôles</th><th>Statut</th></tr></thead>
+   <tbody>${pg.map(p=>{const c=cat(p.cat),b=issues(p).length;return `<tr class="row" onclick="openP('${p.id}')"><td class="c" onclick="event.stopPropagation()"><input type="checkbox" ${SEL.has(p.id)?'checked':''} onchange="tgl('${p.id}')" aria-label="Sélectionner"></td>
+     <td class="num">${p.id}</td><td><b>${esc(nm(p))}</b></td><td><i class="cat-d" style="background:${c.col}"></i>${esc(c.l)}</td><td>${esc(p.org)}</td><td>${esc(p.fct)||'—'}</td>
+     <td>${b?`<span class="chip ${blocking(p).length?'b':'w'}">${b} anomalie${b>1?'s':''}</span>`:'<span style="color:var(--ok);font-weight:600">Conforme</span>'}</td><td>${pill(p.st)}</td></tr>`}).join('')||'<tr><td colspan="8" class="empty">Aucun dossier ne correspond aux filtres.</td></tr>'}</tbody></table></div>
+   <div class="pg"><span>${rows.length} dossier(s)</span><span style="flex:1"></span><button class="btn sm" ${F.page<=1?'disabled':''} onclick="F.page--;render()">Précédent</button><span class="num">Page ${F.page} / ${pages}</span><button class="btn sm" ${F.page>=pages?'disabled':''} onclick="F.page++;render()">Suivant</button></div></div>`;
+}
+V.dem=()=>reg(null);
+V.ath=()=>reg('ath');V.fi=()=>reg('fi');V.fn=()=>reg('fn');V.staff=()=>reg('staff');V.media=()=>reg('media');V.vol=()=>reg('vol');
+function tgl(id){SEL.has(id)?SEL.delete(id):SEL.add(id);render()}
+function selPage(on){CUR.slice((F.page-1)*25,F.page*25).forEach(p=>on?SEL.add(p.id):SEL.delete(p.id));render()}
+const HEAD=['numero','nom','prenom','sexe','date_naissance','nationalite','categorie','organisation','fonction','statut','verification','zones','privileges','restauration','anomalies'];
+const line=p=>{const e=eff(p);return[p.id,p.ln,p.fn,p.sx,p.dob,p.nat,cat(p.cat).l,p.org,p.fct,ST[p.st],p.bg,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',issues(p).map(k=>rule(k)[1]).join(' | ')]};
+function exportCur(){exportFile('dossiers_'+VIEW+'.csv',csv([HEAD,...CUR.map(line)]))}
+
+/* ============ Fiche dossier ============ */
+function openP(id){
+  const p=P(id);if(!p)return;const c=cat(p.cat),e=eff(p),m=S.matrix[p.cat]||{z:[],p:[]},bl=blocking(p);
+  const h=S.audit.filter(a=>a.pid===id).slice(0,12),rq=S.reqs.filter(q=>q.pid===id);
+  let act='';
+  if(can('edit')&&['DRAFT','RET'].includes(p.st))act+=`<button class="btn p" onclick="setSt('${id}','SUB')">Soumettre à la revue</button>`;
+  if(can('review')&&p.st==='SUB')act+=`<button class="btn ok" onclick="setSt('${id}','APP')">Approuver</button><button class="btn" onclick="askWhy('${id}','RET')">Renvoyer pour correction</button><button class="btn bad" onclick="askWhy('${id}','REJ')">Refuser</button>`;
+  if(can('print')&&['APP','PRT'].includes(p.st))act+=`<button class="btn p" onclick="printIds(['${id}'])">${p.st==='PRT'?'Réimprimer':'Imprimer'}</button>`;
+  if(can('print')&&p.st==='PRT')act+=`<button class="btn ok" onclick="setSt('${id}','DLV')">Marquer remis</button>`;
+  if(can('edit'))act+=`<button class="btn" onclick="editP('${id}')">Modifier</button><button class="btn" onclick="reqNew('${id}')">Demander un accès</button>`;
+  drawer(`<div class="modal-h"><div style="flex:1;min-width:0"><h3>${esc(nm(p))}</h3><span style="font-size:12px;color:var(--ink3)" class="num">Dossier ${p.id}</span></div>${pill(p.st)}<button class="xb" onclick="closeOv(this)" aria-label="Fermer">×</button></div>
+  <div class="modal-b" style="flex:1">
+   <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start"><div style="--bs:5px">${badge(p)}</div>
+   <dl class="dl" style="flex:1;min-width:220px"><dt>Catégorie</dt><dd><i class="cat-d" style="background:${c.col}"></i>${esc(c.l)}</dd><dt>Organisation</dt><dd>${esc(p.org)}</dd><dt>Fonction</dt><dd>${esc(p.fct)||'—'}</dd>
+    <dt>Sexe</dt><dd>${p.sx==='F'?'Féminin':'Masculin'}</dd><dt>Naissance</dt><dd>${fmtD(p.dob)}${age(p.dob)!=null?` <span style="color:var(--ink3)">(${age(p.dob)} ans en 2026)</span>`:''}</dd><dt>Nationalité</dt><dd>${esc(p.nat)||'—'}</dd>
+    <dt>Photo</dt><dd>${p.photo||p.hasPh?'Fournie':'Manquante'}</dd><dt>Pièce d'identité</dt><dd>${p.doc?'Fournie':'Non fournie'}</dd><dt>Vérification</dt><dd>${{OK:'Conforme',PEND:'En attente',FLAG:'Signalée'}[p.bg]}</dd></dl></div>
+   ${p.note?`<div class="note w" style="margin:14px 0 0"><b>Commentaire de revue :</b> ${esc(p.note)}</div>`:''}
+   <div class="sec">Contrôles de données</div><div>${issChips(p)}</div>
+   <div class="sec">Droits d'accès effectifs</div>
+   <div>${e.z.map(z=>`<span class="chip k" title="${esc(z.n)}${m.z.includes(z.c)?'':' — ajout individuel'}">${esc(z.c)}${m.z.includes(z.c)?'':' +'}</span>`).join('')||'<span style="color:var(--ink3)">Aucune zone</span>'}</div>
+   <div style="margin-top:6px">${e.p.map(x=>`<span class="chip x" title="${m.p.includes(x.c)?'Catégorie':'Ajout individuel'}">${esc(x.c)} · ${esc(x.n)}${m.p.includes(x.c)?'':' +'}</span>`).join('')||'<span style="color:var(--ink3)">Aucun privilège</span>'}${e.m?'<span class="chip">Restauration</span>':''}</div>
+   <p style="font-size:12px;color:var(--ink3);margin:6px 0 0">Le signe + indique un ajout individuel accordé en plus des droits de la catégorie.</p>
+   ${rq.length?`<div class="sec">Demandes d'ajout d'accès</div>${rq.map(q=>`<div style="padding:3px 0">${pill(q.st,RQ)} ${rqLabel(q)} <span style="color:var(--ink3)">— ${esc(q.motif)}</span></div>`).join('')}`:''}
+   <div class="sec">Historique</div><div class="hist">${h.map(a=>`<div><b>${esc(a.a)}</b> — ${esc(a.d)}<br><small>${fmtT(a.t)} · ${esc(a.u)}</small></div>`).join('')||'<div style="color:var(--ink3)">Aucune action enregistrée dans cette session.</div>'}</div>
+  </div><div class="modal-f" style="justify-content:flex-start">${act||'<span style="color:var(--ink3)">Aucune action disponible pour votre rôle.</span>'}${bl.length&&p.st==='SUB'?`<span style="font-size:12px;color:var(--bad);width:100%">Approbation bloquée : ${bl.map(k=>rule(k)[1]).join(', ')}.</span>`:''}</div>`);
+}
+function setSt(id,st,why,quiet){
+  const p=P(id);if(!p)return false;
+  if(st==='APP'){const b=blocking(p);if(b.length){if(!quiet)toast('Approbation impossible : '+b.map(k=>rule(k)[1]).join(', '));return false}}
+  p.st=st;p.note=['RET','REJ'].includes(st)?why||'':'';
+  log('Statut',`${nm(p)} → ${ST[st]}${why?' ('+why+')':''}`,id);
+  if(!quiet){closeAll();render();toast(nm(p)+' : '+ST[st]);if(st!=='REJ')openP(id)}return true;
+}
+function askWhy(id,st){modal(st==='RET'?'Renvoyer pour correction':'Refuser le dossier',`<div class="fld"><label for="why">Motif communiqué au demandeur (obligatoire)</label><textarea class="inp" id="why" placeholder="Ex. : photo non conforme, fond non uni"></textarea></div>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="const w=$('#why').value.trim();if(!w){toast('Le motif est obligatoire');return}setSt('${id}','${st}',w)">Confirmer</button>`)}
+function bulk(st){let ok=0,ko=0;[...SEL].forEach(id=>{const p=P(id);const from=st==='SUB'?['DRAFT','RET']:['SUB'];if(p&&from.includes(p.st)&&setSt(id,st,'',1))ok++;else ko++});
+  SEL.clear();render();toast(`${ok} dossier(s) passés à « ${ST[st]} »${ko?`, ${ko} ignoré(s) (statut ou anomalie bloquante)`:''}`)}
+
+/* ============ Formulaire dossier ============ */
+let PH='';
+function editP(id,defCat){
+  const p=id?P(id):{ln:'',fn:'',sx:'F',dob:'',nat:'',cat:defCat||S.cats[0].c,org:'',fct:'',doc:false,photo:'',hasPh:false};PH=p.photo||'';
+  modal(id?'Modifier le dossier':'Nouveau dossier',`<div class="form">
+   <div class="fld"><label for="e-ln">Nom</label><input class="inp" id="e-ln" value="${esc(p.ln)}"></div><div class="fld"><label for="e-fn">Prénom</label><input class="inp" id="e-fn" value="${esc(p.fn)}"></div>
+   <div class="fld"><label for="e-sx">Sexe</label><select class="inp" id="e-sx">${opt([['F','Féminin'],['M','Masculin']],p.sx)}</select></div><div class="fld"><label for="e-dob">Date de naissance</label><input class="inp" id="e-dob" type="date" value="${p.dob}"></div>
+   <div class="fld"><label for="e-cat">Catégorie</label><select class="inp" id="e-cat">${opt(S.cats.map(c=>[c.c,c.l]),p.cat)}</select></div><div class="fld"><label for="e-nat">Nationalité</label><input class="inp" id="e-nat" value="${esc(p.nat)}"></div>
+   <div class="fld"><label for="e-org">Organisation</label><input class="inp" id="e-org" list="orgs" value="${esc(p.org)}"><datalist id="orgs">${[...new Set(S.persons.map(x=>x.org))].sort().map(o=>`<option value="${esc(o)}">`).join('')}</datalist></div>
+   <div class="fld"><label for="e-fct">Fonction / discipline</label><input class="inp" id="e-fct" value="${esc(p.fct)}"></div>
+   <div class="fld"><label for="e-ph">Photo d'identité</label><input class="inp" id="e-ph" type="file" accept="image/*" onchange="readPh(this)"></div>
+   <div class="fld"><label>&nbsp;</label><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="e-doc" ${p.doc?'checked':''}> Pièce d'identité fournie et lisible</label></div></div>`,
+  `${id&&can('admin')?`<button class="btn bad" style="margin-right:auto" onclick="delP('${id}')">Supprimer</button>`:''}<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="saveP('${id||''}')">Enregistrer</button>`);
+}
+function readPh(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=348;c.height=438;const k=Math.max(348/im.width,438/im.height),w=im.width*k,h=im.height*k;c.getContext('2d').drawImage(im,(348-w)/2,(438-h)/2,w,h);PH=c.toDataURL('image/jpeg',.82);toast('Photo chargée')};im.src=r.result};r.readAsDataURL(f)}
+function saveP(id){
+  const g=k=>$('#e-'+k).value.trim(),ln=g('ln'),fn=g('fn');if(!ln||!fn||!g('org')){toast('Nom, prénom et organisation sont obligatoires');return}
+  let p=id?P(id):null;
+  if(!p){const n=Math.max(...S.persons.map(x=>parseInt(x.id)))+1+Math.floor(Math.random()*20);p={id:n+'-'+(10+Math.floor(Math.random()*80)),bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:'',hasPh:false,photo:''};S.persons.unshift(p)}
+  Object.assign(p,{ln,fn,sx:g('sx'),dob:g('dob'),cat:g('cat'),nat:g('nat'),org:g('org'),fct:g('fct'),doc:$('#e-doc').checked});if(PH){p.photo=PH;p.hasPh=true}
+  log('Dossiers',(id?'Modification de ':'Création de ')+nm(p),p.id);closeAll();render();openP(p.id);toast('Dossier enregistré');
+}
+function delP(id){const p=P(id);modal('Supprimer le dossier',`<p style="margin:0">Supprimer définitivement le dossier de <b>${esc(nm(p))}</b> ? Cette action est tracée dans le journal d'audit.</p>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn bad" onclick="doDel('${id}')">Supprimer</button>`)}
+function importCSV(){modal('Import en masse',`<p style="margin:0 0 10px;color:var(--ink2)">Une ligne par personne, séparateur point-virgule. Les dossiers sont créés au statut « Brouillon ».</p>
+  <pre style="background:var(--sky3);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;overflow-x:auto;margin:0 0 10px">nom;prenom;sexe;date_naissance;categorie;organisation;fonction;nationalite</pre>
+  <p style="margin:0 0 6px;font-size:12px;color:var(--ink3)">Codes catégorie : ${S.cats.map(c=>c.c+' = '+esc(c.l)).join(', ')}.</p>
+  <textarea class="inp" id="imp" style="min-height:150px;font:12px ui-monospace,Menlo,monospace" placeholder="Diop;Awa;F;2009-04-12;ATH;Sénégal;Natation;Sénégal"></textarea>
+  <div class="fld" style="margin-top:10px"><label for="imp-f">Ou charger un fichier CSV</label><input class="inp" id="imp-f" type="file" accept=".csv,.txt" onchange="const r=new FileReader();r.onload=()=>$('#imp').value=r.result;r.readAsText(this.files[0])"></div>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="doImport()">Importer</button>`)}
+function doImport(){
+  let ok=0,ko=0,seq=Math.max(...S.persons.map(x=>parseInt(x.id)));
+  $('#imp').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const a=l.split(/;|\t/).map(x=>x.trim());
+    if(a[0].toLowerCase()==='nom')return;const c=(a[4]||'').toUpperCase();
+    if(a.length<6||!a[0]||!a[1]||!S.cats.some(x=>x.c===c)){ko++;return}
+    seq+=7;S.persons.unshift({id:seq+'-'+(10+ok%80),ln:a[0],fn:a[1],sx:(a[2]||'').toUpperCase()==='M'?'M':'F',dob:/^\d{4}-\d{2}-\d{2}$/.test(a[3])?a[3]:'',cat:c,org:a[5],fct:a[6]||'',nat:a[7]||'',photo:'',hasPh:false,doc:false,bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:''});ok++});
+  if(!ok&&!ko){toast('Aucune ligne à importer');return}
+  log('Dossiers',`Import en masse : ${ok} créé(s), ${ko} rejeté(s)`);closeAll();F.st='DRAFT';render();toast(`${ok} dossier(s) importé(s)${ko?`, ${ko} ligne(s) rejetée(s)`:''}`);
+}
+function doDel(id){const p=P(id),n=nm(p);S.persons=S.persons.filter(x=>x.id!==id);S.reqs=S.reqs.filter(q=>q.pid!==id);log('Dossiers','Suppression de '+n);closeAll();render();toast('Dossier supprimé')}
+
+/* ============ Revue des données ============ */
+V.revue=()=>{
+  const live=S.persons.filter(p=>p.st!=='REJ'),sub=live.filter(p=>p.st==='SUB');
+  const rows=(UI.rule?live.filter(p=>issues(p).includes(UI.rule)):sub).slice().sort((a,b)=>blocking(b).length-blocking(a).length||issues(b).length-issues(a).length);
+  const clean=sub.filter(p=>!blocking(p).length);
+  return `<div class="note">La revue contrôle chaque dossier soumis avant approbation. Une anomalie <b>bloquante</b> (en rouge) empêche l'approbation tant qu'elle n'est pas corrigée ; les autres sont des points d'attention.</div>
+  <div class="kpis"><button class="kpi" onclick="UI.rule='';render()" style="${UI.rule?'':'border-color:var(--blue)'}"><small>File de revue</small><b class="num">${sub.length}</b><em>${clean.length} sans anomalie bloquante</em></button>
+   ${RULES.map(r=>{const n=live.filter(p=>issues(p).includes(r[0])).length;return `<button class="kpi" onclick="UI.rule='${r[0]}';render()" style="${UI.rule===r[0]?'border-color:var(--blue)':''}"><small>${r[1]}</small><b class="num" style="color:${n?(r[2]?'var(--bad)':'var(--warn)'):'var(--ink3)'}">${n}</b><em>${r[2]?'bloquant':'attention'}</em></button>`}).join('')}</div>
+  <div class="card"><div class="card-h"><h3>${UI.rule?esc(rule(UI.rule)[1])+' — tous statuts':'Dossiers soumis à valider'}</h3><span class="sp"></span>
+   ${can('review')&&!UI.rule&&clean.length?`<button class="btn ok" onclick="approveClean()">Approuver les ${clean.length} dossiers conformes</button>`:''}
+   ${can('export')?`<button class="btn" onclick="CUR=RV;exportFile('revue_donnees.csv',csv([HEAD,...RV.map(line)]))">Exporter</button>`:''}</div>
+   <div class="tw"><table class="t"><thead><tr><th>Titulaire</th><th>Catégorie</th><th>Organisation</th><th>Anomalies</th><th>Statut</th><th></th></tr></thead><tbody>
+   ${(RV=rows).slice(0,80).map(p=>`<tr class="row" onclick="openP('${p.id}')"><td><b>${esc(nm(p))}</b><small class="num">${p.id}</small></td><td>${esc(cat(p.cat).l)}</td><td>${esc(p.org)}</td><td>${issChips(p)}</td><td>${pill(p.st)}</td>
+    <td class="r" onclick="event.stopPropagation()" style="white-space:nowrap">${can('review')&&p.st==='SUB'?`<button class="btn sm" ${blocking(p).length?'disabled title="Anomalie bloquante"':''} onclick="setSt('${p.id}','APP',null,1)&&(render(),toast('Dossier approuvé'))">Approuver</button> <button class="btn sm" onclick="askWhy('${p.id}','RET')">Renvoyer</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Rien à traiter.</td></tr>'}
+   </tbody></table></div>${rows.length>80?`<div class="pg">80 premiers dossiers affichés sur ${rows.length}. Exportez pour la liste complète.</div>`:''}</div>`;
+};
+let RV=[];
+function approveClean(){let n=0;S.persons.filter(p=>p.st==='SUB').forEach(p=>{if(setSt(p.id,'APP',null,1))n++});render();toast(n+' dossier(s) approuvé(s)')}
+
+/* ============ Vérifications ============ */
+V.verif=()=>{
+  const rows=S.persons.filter(p=>p.bg!=='OK'&&p.st!=='REJ');
+  return `<div class="kpis">${[['En attente',rows.filter(p=>p.bg==='PEND').length],['Signalées',rows.filter(p=>p.bg==='FLAG').length],['Conformes',S.persons.filter(p=>p.bg==='OK').length]].map(x=>`<div class="kpi" style="cursor:default"><small>${x[0]}</small><b class="num">${x[1]}</b></div>`).join('')}</div>
+  <div class="card"><div class="card-h"><h3>Vérifications à statuer</h3></div><div class="tw"><table class="t"><thead><tr><th>Titulaire</th><th>Catégorie</th><th>Organisation</th><th>État</th><th>Dossier</th><th></th></tr></thead><tbody>
+  ${rows.map(p=>`<tr class="row" onclick="openP('${p.id}')"><td><b>${esc(nm(p))}</b><small class="num">${p.id}</small></td><td>${esc(cat(p.cat).l)}</td><td>${esc(p.org)}</td><td>${p.bg==='FLAG'?'<span class="chip b">Signalée</span>':'<span class="chip w">En attente</span>'}</td><td>${pill(p.st)}</td>
+   <td class="r" onclick="event.stopPropagation()" style="white-space:nowrap">${can('review')?`<button class="btn sm" onclick="setBg('${p.id}','OK')">Conforme</button> ${p.bg!=='FLAG'?`<button class="btn sm bad" onclick="setBg('${p.id}','FLAG')">Signaler</button>`:''}`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Toutes les vérifications sont statuées.</td></tr>'}</tbody></table></div></div>`;
+};
+function setBg(id,v){const p=P(id);p.bg=v;log('Vérification',`${nm(p)} → ${v==='OK'?'conforme':'signalée'}`,id);render()}
+
+/* ============ Matrice d'accès ============ */
+V.matrix=()=>{
+  const ed=can('matrix'),dis=ed?'':'disabled';
+  return `<div class="note">La matrice définit les droits par défaut de chaque catégorie. Elle alimente directement le recto et le verso de l'accréditation. Les exceptions individuelles passent par « Ajouts d'accès ».</div>
+  <div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Droits par catégorie</h3></div><div class="tw"><table class="t mx"><thead><tr><th rowspan="2">Catégorie</th><th colspan="${S.zones.length}" style="border-left:1px solid var(--line)">Zones</th><th colspan="${S.privs.length}" style="border-left:1px solid var(--line)">Privilèges</th><th rowspan="2" style="border-left:1px solid var(--line)">Restau-<br>ration</th></tr>
+   <tr>${S.zones.map((z,i)=>`<th title="${esc(z.n)}"${i?'':' style="border-left:1px solid var(--line)"'}>${esc(z.c)}</th>`).join('')}${S.privs.map((x,i)=>`<th title="${esc(x.n)}"${i?'':' style="border-left:1px solid var(--line)"'}>${esc(x.c)}</th>`).join('')}</tr></thead><tbody>
+   ${S.cats.map(c=>{const m=S.matrix[c.c];return `<tr><td><i class="cat-d" style="background:${c.col}"></i><b>${esc(c.l)}</b></td>
+    ${S.zones.map(z=>`<td><input type="checkbox" ${dis} ${m.z.includes(z.c)?'checked':''} onchange="mx('${c.c}','z','${z.c}')" aria-label="${esc(c.l)} ${esc(z.c)}"></td>`).join('')}
+    ${S.privs.map(x=>`<td><input type="checkbox" ${dis} ${m.p.includes(x.c)?'checked':''} onchange="mx('${c.c}','p','${x.c}')" aria-label="${esc(c.l)} ${esc(x.c)}"></td>`).join('')}
+    <td><input type="checkbox" ${dis} ${m.m?'checked':''} onchange="mx('${c.c}','m')" aria-label="${esc(c.l)} restauration"></td></tr>`}).join('')}</tbody></table></div></div>
+  <div class="grid g2">
+   <div class="card"><div class="card-h"><h3>Zones</h3><span class="sp"></span>${ed?`<button class="btn sm p" onclick="refEdit('zones',-1)">Ajouter une zone</button>`:''}</div><div class="tw"><table class="t"><tbody>
+    ${S.zones.map((z,i)=>`<tr><td style="width:70px"><span class="chip k"${z.o?' style="background:#fff;color:#000;box-shadow:inset 0 0 0 1.500px #000"':''}>${esc(z.c)}</span></td><td>${esc(z.n)}<small>${z.o?'Hors compétition (encadré)':'Site de compétition'}</small></td><td class="r">${ed?`<button class="btn sm" onclick="refEdit('zones',${i})">Modifier</button>`:''}</td></tr>`).join('')}</tbody></table></div></div>
+   <div class="card"><div class="card-h"><h3>Privilèges</h3><span class="sp"></span>${ed?`<button class="btn sm p" onclick="refEdit('privs',-1)">Ajouter un privilège</button>`:''}</div><div class="tw"><table class="t"><tbody>
+    ${S.privs.map((x,i)=>`<tr><td style="width:70px"><span class="chip x">${esc(x.c)}</span></td><td>${esc(x.n)}</td><td class="r">${ed?`<button class="btn sm" onclick="refEdit('privs',${i})">Modifier</button>`:''}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+};
+function mx(c,k,code){const m=S.matrix[c];if(k==='m')m.m=m.m?0:1;else{const i=m[k].indexOf(code);i<0?m[k].push(code):m[k].splice(i,1)}
+  log('Matrice d\'accès',`${cat(c).l} : ${k==='m'?'restauration':(k==='z'?'zone ':'privilège ')+code} ${k==='m'?(m.m?'activée':'retirée'):(m[k].includes(code)?'ajouté':'retiré')}`);render()}
+function refEdit(kind,i){const zn=kind==='zones',o=i<0?{c:'',n:'',o:0}:S[kind][i];
+  modal((i<0?'Ajouter':'Modifier')+(zn?' une zone':' un privilège'),`<div class="form"><div class="fld"><label for="r-c">Code (imprimé sur l'accréditation)</label><input class="inp" id="r-c" maxlength="${zn?3:1}" value="${esc(o.c)}" ${i<0?'':'disabled'} style="text-transform:uppercase"></div>
+   <div class="fld"><label for="r-n">Libellé (légende du verso)</label><input class="inp" id="r-n" value="${esc(o.n)}"></div>
+   ${zn?`<label class="full" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="r-o" ${o.o?'checked':''}> Zone hors compétition (case encadrée au lieu de pleine)</label>`:''}</div>`,
+  `${i>=0?`<button class="btn bad" style="margin-right:auto" onclick="refDel('${kind}',${i})">Supprimer</button>`:''}<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="refSave('${kind}',${i})">Enregistrer</button>`)}
+function refSave(kind,i){const c=$('#r-c').value.trim().toUpperCase(),n=$('#r-n').value.trim();if(!c||!n){toast('Code et libellé obligatoires');return}
+  if(i<0){if(S[kind].some(x=>x.c===c)){toast('Ce code existe déjà');return}S[kind].push({c,n,o:kind==='zones'&&$('#r-o').checked?1:0})}else{S[kind][i].n=n;if(kind==='zones')S[kind][i].o=$('#r-o').checked?1:0}
+  log('Matrice d\'accès',`${kind==='zones'?'Zone':'Privilège'} ${c} ${i<0?'créé':'modifié'} (${n})`);closeAll();render()}
+function refDel(kind,i){const c=S[kind][i].c,k=kind==='zones'?'z':'p',xk=kind==='zones'?'xz':'xp';S[kind].splice(i,1);
+  Object.values(S.matrix).forEach(m=>m[k]=m[k].filter(x=>x!==c));S.persons.forEach(p=>p[xk]=p[xk].filter(x=>x!==c));
+  log('Matrice d\'accès',`${kind==='zones'?'Zone':'Privilège'} ${c} supprimé`);closeAll();render()}
+
+/* ============ Ajouts d'accès ============ */
+const rqLabel=q=>q.type==='meal'?'Restauration':q.type==='zone'?`Zone <span class="chip k">${esc(q.code)}</span>`:`Privilège <span class="chip x">${esc(q.code)}</span>`;
+V.acces=()=>{
+  const rows=S.reqs.filter(q=>!UI.rq||q.st===UI.rq),n=k=>S.reqs.filter(q=>q.st===k).length;
+  return `<div class="note">Un ajout d'accès accorde à une personne une zone ou un privilège en plus de ceux de sa catégorie. Une fois accordé, il apparaît sur son accréditation ; si elle est déjà imprimée, une réimpression est nécessaire.</div>
+  <div class="card"><div class="card-h"><div class="tabs">${[['PEND','En attente'],['OK','Accordés'],['NO','Refusés'],['','Tous']].map(t=>`<button class="tab${UI.rq===t[0]?' on':''}" onclick="UI.rq='${t[0]}';render()">${t[1]} <span class="num">${t[0]?n(t[0]):S.reqs.length}</span></button>`).join('')}</div><span class="sp"></span>
+   ${can('export')?`<button class="btn" onclick="runExport('acc')">Exporter</button>`:''}${can('edit')?`<button class="btn p" onclick="reqNew('')">Nouvelle demande</button>`:''}</div>
+  <div class="tw"><table class="t"><thead><tr><th>Réf.</th><th>Titulaire</th><th>Ajout demandé</th><th>Justification</th><th>Demandé par</th><th>État</th><th></th></tr></thead><tbody>
+  ${rows.map(q=>{const p=P(q.pid);return `<tr class="row" onclick="openP('${q.pid}')"><td class="num">${q.id}</td><td><b>${esc(nm(p))}</b><small>${p?esc(cat(p.cat).l)+' · '+ST[p.st]:''}</small></td><td>${rqLabel(q)}</td><td style="max-width:260px">${esc(q.motif)}</td><td>${esc(q.by)}<small class="num">${fmtT(q.t)}</small></td><td>${pill(q.st,RQ)}${q.dec?`<small>${esc(q.dec)}</small>`:''}</td>
+   <td class="r" onclick="event.stopPropagation()" style="white-space:nowrap">${q.st==='PEND'&&can('access')?`<button class="btn sm ok" onclick="reqDecide('${q.id}',1)">Accorder</button> <button class="btn sm bad" onclick="reqDecide('${q.id}',0)">Refuser</button>`:''}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Aucune demande.</td></tr>'}</tbody></table></div></div>`;
+};
+function reqNew(pid){
+  modal('Demande d\'ajout d\'accès',`<div class="form"><div class="fld full"><label for="q-p">Titulaire (n° de dossier)</label><input class="inp" id="q-p" list="q-l" value="${esc(pid)}" placeholder="Tapez un nom puis choisissez"><datalist id="q-l">${S.persons.filter(p=>p.st!=='REJ').map(p=>`<option value="${p.id}">${esc(nm(p))} — ${esc(cat(p.cat).l)}</option>`).join('')}</datalist></div>
+   <div class="fld"><label for="q-t">Type</label><select class="inp" id="q-t" onchange="$('#q-c').innerHTML=reqCodes(this.value);$('#q-c').disabled=this.value==='meal'">${opt([['zone','Zone'],['priv','Privilège'],['meal','Restauration']],'zone')}</select></div>
+   <div class="fld"><label for="q-c">Code</label><select class="inp" id="q-c">${reqCodes('zone')}</select></div>
+   <div class="fld full"><label for="q-m">Justification opérationnelle (obligatoire)</label><textarea class="inp" id="q-m"></textarea></div></div>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="reqSave()">Envoyer la demande</button>`)}
+const reqCodes=t=>t==='meal'?'<option value="">—</option>':opt((t==='zone'?S.zones:S.privs).map(x=>[x.c,x.c+' — '+x.n]),'');
+function reqSave(){const pid=$('#q-p').value.trim(),p=P(pid),type=$('#q-t').value,code=$('#q-c').value,motif=$('#q-m').value.trim();
+  if(!p){toast('Dossier introuvable : choisissez un titulaire dans la liste');return}if(!motif){toast('La justification est obligatoire');return}
+  const e=eff(p);if((type==='zone'&&e.z.some(z=>z.c===code))||(type==='priv'&&e.p.some(x=>x.c===code))||(type==='meal'&&e.m)){toast('Ce droit est déjà attribué à cette personne');return}
+  const id='AA-'+String(Math.max(0,...S.reqs.map(q=>parseInt(q.id.slice(3))))+1).padStart(3,'0');S.reqs.unshift({id,pid,type,code,motif,by:me().n,t:Date.now(),st:'PEND',dec:''});
+  log('Ajouts d\'accès',`Demande ${id} pour ${nm(p)}`,pid);closeAll();UI.rq='PEND';go('acces',1);toast('Demande '+id+' enregistrée')}
+function reqDecide(id,ok){const q=S.reqs.find(x=>x.id===id),p=P(q.pid);q.st=ok?'OK':'NO';q.dec=me().n;
+  if(ok&&p){if(q.type==='zone')p.xz.push(q.code);else if(q.type==='priv')p.xp.push(q.code);else p.xm=1}
+  log('Ajouts d\'accès',`Demande ${id} ${ok?'accordée':'refusée'} (${nm(p)})`,q.pid);render();
+  toast(ok?(p&&['PRT','DLV'].includes(p.st)?'Accordé — accréditation déjà imprimée : réimpression à prévoir':'Accès accordé et ajouté à l\'accréditation'):'Demande refusée')}
+/* ============ Accréditation : rendu recto / verso ============ */
+function qr(t){try{const q=qrcode(0,'M');q.addData(String(t));q.make();const n=q.getModuleCount();let d='';for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(q.isDark(y,x))d+=`M${x} ${y}h1v1h-1z`;
+  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges"><path d="${d}"/></svg>`}catch(e){return '<svg viewBox="0 0 10 10"><rect width="10" height="10" fill="none" stroke="#000" stroke-width=".4"/><text x="5" y="6" font-size="2" text-anchor="middle">QR</text></svg>'}}
+function badge(p,back){
+  const c=cat(p.cat),e=eff(p),T=S.tpl,ph=`<div class="b-ph">${p.photo?`<img src="${p.photo}" alt="">`:SIL}</div>`;
+  const bar=`<div class="b-bar" style="background:${T.bar}">${e.p.map(x=>`<span>${esc(x.c)}</span>`).join('')}</div>`;
+  if(back)return `<div class="bdg"><div class="b-bk">${ph}<div><h4>${esc(p.ln)}, ${esc(p.fn)}</h4><p>${esc(c.l)}</p><p class="i">${p.id}</p></div></div>
+   ${T.showLeg?`<div class="b-leg"><div>${T.showZ?e.z.map(z=>`<div><i${z.o?' class="o"':''}>${esc(z.c)}</i><span>${esc(z.n)}</span></div>`).join(''):''}</div>
+   <div>${e.p.map(x=>`<div><i class="n">${esc(x.c)}</i><span>${esc(x.n)}</span></div>`).join('')}<div><i class="c" style="background:${T.bar}"></i><span>${esc(T.gen)}</span></div>${T.showM&&e.m?`<div><i class="f">${FORK}</i><span>Restauration</span></div>`:''}</div></div>`:''}${bar}</div>`;
+  return `<div class="bdg"><div class="b-top">${ph}<div class="b-tr"><div class="b-ev">${T.showEv?`${esc(T.ev)}<small>${esc(T.sub)}</small>`:''}</div><div class="b-ban" style="background:${c.col}">${esc(c.b)}</div></div></div>
+   <div class="b-name">${esc(p.fn)} ${esc(p.ln.toUpperCase())}</div><div class="b-fn">${esc(c.l)}</div><div class="b-org">${esc(p.fct)}${p.fct&&p.org?' · ':''}${esc(p.org)}</div>
+   <div class="b-mid">${T.showM&&e.m?`<div class="b-meal">${FORK}</div>`:''}<div class="b-qr"><b>${p.id}</b>${qr(p.id)}</div></div>
+   ${T.showZ?`<div class="b-zones">${e.z.map(z=>`<div class="b-z${z.o?' o':''}"><span>${esc(z.c)}</span></div>`).join('')}</div>`:''}${bar}</div>`;
+}
+
+/* ============ Template d'accréditation ============ */
+V.tpl=()=>{
+  const T=S.tpl,ed=can('matrix'),p=P(UI.tplP)||S.persons.find(x=>x.cat==='STF')||S.persons[0],dis=ed?'':'disabled';
+  const chk=(k,l)=>`<label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="checkbox" ${dis} ${T[k]?'checked':''} onchange="tplSet('${k}',this.checked?1:0)"> ${l}</label>`;
+  return `<div class="grid" style="grid-template-columns:minmax(0,340px) minmax(0,1fr);align-items:start" id="tpl-g">
+  <div class="grid">
+   <div class="card"><div class="card-h"><h3>Aperçu sur un dossier</h3></div><div class="card-b"><div class="fld"><label for="t-p">Titulaire</label><select class="inp" id="t-p" onchange="UI.tplP=this.value;render()">${S.cats.map(c=>`<optgroup label="${esc(c.l)}">${S.persons.filter(x=>x.cat===c.c).slice(0,8).map(x=>`<option value="${x.id}"${x.id===p.id?' selected':''}>${esc(nm(x))}</option>`).join('')}</optgroup>`).join('')}</select></div>
+    <div class="tb" style="margin-top:12px"><button class="btn p" ${can('print')?'':'disabled'} onclick="printIds(['${p.id}'],1)">Imprimer un spécimen</button><button class="btn" onclick="openP('${p.id}')">Ouvrir le dossier</button></div></div></div>
+   <div class="card"><div class="card-h"><h3>Réglages du gabarit</h3></div><div class="card-b">
+    <div class="fld"><label>Couleur de la bande de privilèges</label><div class="tb">${[['#15803D','Vert'],['#E3000F','Rouge'],['#1D4ED8','Bleu'],['#111111','Noir']].map(c=>`<button class="sw${T.bar===c[0]?' on':''}" ${dis} style="background:${c[0]}" title="${c[1]}" aria-label="${c[1]}" onclick="tplSet('bar','${c[0]}')"></button>`).join('')}</div></div>
+    <div class="form" style="margin-top:12px"><div class="fld"><label for="t-ev">Événement</label><input class="inp" id="t-ev" ${dis} value="${esc(T.ev)}" onchange="tplSet('ev',this.value)"></div><div class="fld"><label for="t-sub">Sous-titre</label><input class="inp" id="t-sub" ${dis} value="${esc(T.sub)}" onchange="tplSet('sub',this.value)"></div>
+     <div class="fld full"><label for="t-gen">Légende de la couleur de bande</label><input class="inp" id="t-gen" ${dis} value="${esc(T.gen)}" onchange="tplSet('gen',this.value)"></div></div>
+    <div style="margin-top:10px">${chk('showEv','Afficher l\'en-tête événement')}${chk('showZ','Afficher les codes de zones')}${chk('showM','Afficher le pictogramme restauration')}${chk('showLeg','Afficher la légende au verso')}</div></div></div>
+   <div class="card"><div class="card-h"><h3>Bandeau par catégorie</h3></div><div class="tw"><table class="t"><tbody>${S.cats.map((c,i)=>`<tr><td style="width:44px"><input type="color" ${dis} value="${c.col}" onchange="S.cats[${i}].col=this.value;save();render()" aria-label="Couleur ${esc(c.l)}" style="width:30px;height:26px;padding:0;border:0;background:none"></td><td><small>${esc(c.l)}</small><input class="inp" ${dis} value="${esc(c.b)}" onchange="S.cats[${i}].b=this.value.toUpperCase();save();render()" aria-label="Libellé du bandeau ${esc(c.l)}" style="width:100%"></td></tr>`).join('')}</tbody></table></div></div>
+  </div>
+  <div class="card"><div class="card-h"><h3>Recto et verso</h3><span class="sp"></span><span style="font-size:12px;color:var(--ink3)">Zones et privilèges issus de la matrice d'accès</span></div><div class="card-b"><div class="pair" style="--bs:10.5px">${badge(p)}${badge(p,1)}</div>
+   <p style="font-size:12.5px;color:var(--ink2);margin:14px 0 0">Structure reprise du modèle fourni : photo en haut à gauche, bandeau de catégorie, nom, fonction, pictogramme restauration, numéro et QR code, cases de zones, bande de privilèges ; au verso, identité, légende des zones et des privilèges, bande répétée. Les zones hors compétition sont encadrées au lieu d'être pleines.</p></div></div></div>
+  <style>@media (max-width:1100px){#tpl-g{grid-template-columns:1fr!important}}</style>`;
+};
+function tplSet(k,v){S.tpl[k]=v;log('Template','Réglage « '+k+' » modifié');render()}
+
+/* ============ Impression ============ */
+V.print=()=>{
+  const tabs=[['APP','À imprimer'],['PRT','Imprimés, à remettre'],['DLV','Remis']],rows=S.persons.filter(p=>p.st===UI.pt);CUR=rows;
+  const selN=[...SEL].filter(id=>rows.some(p=>p.id===id)).length;
+  return `<div class="card"><div class="card-h"><div class="tabs">${tabs.map(t=>`<button class="tab${UI.pt===t[0]?' on':''}" onclick="UI.pt='${t[0]}';SEL.clear();render()">${t[1]} <span class="num">${S.persons.filter(p=>p.st===t[0]).length}</span></button>`).join('')}</div><span class="sp"></span>
+   ${can('export')?`<button class="btn" onclick="runExport('man')">Manifeste</button>`:''}
+   ${can('print')&&UI.pt!=='DLV'?`<button class="btn" onclick="CUR.slice(0,24).forEach(p=>SEL.add(p.id));render()">Sélectionner un lot de 24</button><button class="btn p" ${selN?'':'disabled'} onclick="printIds([...SEL])">${UI.pt==='PRT'?'Réimprimer':'Imprimer'} la sélection (${selN})</button>`:''}
+   ${can('print')&&UI.pt==='PRT'?`<button class="btn ok" ${selN?'':'disabled'} onclick="[...SEL].forEach(id=>setSt(id,'DLV',null,1));SEL.clear();render();toast('Remise enregistrée')">Marquer remis</button>`:''}</div>
+  <div class="tw"><table class="t"><thead><tr><th class="c"></th><th>N° dossier</th><th>Titulaire</th><th>Catégorie</th><th>Organisation</th><th>Zones</th><th>Privilèges</th></tr></thead><tbody>
+  ${rows.slice(0,100).map(p=>{const e=eff(p);return `<tr class="row" onclick="openP('${p.id}')"><td class="c" onclick="event.stopPropagation()"><input type="checkbox" ${SEL.has(p.id)?'checked':''} onchange="tgl('${p.id}')" aria-label="Sélectionner"></td><td class="num">${p.id}</td><td><b>${esc(nm(p))}</b></td><td>${esc(cat(p.cat).l)}</td><td>${esc(p.org)}</td>
+   <td>${e.z.map(z=>`<span class="chip k">${esc(z.c)}</span>`).join('')}</td><td>${e.p.map(x=>`<span class="chip x">${esc(x.c)}</span>`).join('')}${e.m?'<span class="chip">Restauration</span>':''}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Aucune accréditation dans cet état.</td></tr>'}</tbody></table></div>
+  ${rows.length>100?`<div class="pg">100 premières lignes affichées sur ${rows.length}.</div>`:''}</div>`;
+};
+let PRN=[];
+function printIds(ids,specimen){
+  const ps=ids.map(P).filter(p=>p&&(specimen||['APP','PRT','DLV'].includes(p.st)));
+  if(!ps.length){toast('Seuls les dossiers approuvés peuvent être imprimés');return}
+  PRN=specimen?[]:ps.filter(p=>p.st==='APP').map(p=>p.id);
+  $('#printarea').innerHTML=ps.map(p=>`<div class="sheet">${badge(p)}${badge(p,1)}</div>`).join('');
+  closeAll();
+  modal(`Impression — ${ps.length} accréditation(s)`,`<div class="pair" style="max-height:52vh;overflow:auto">${ps.slice(0,3).map(p=>`<div style="display:flex;gap:10px;--bs:6.5px">${badge(p)}${badge(p,1)}</div>`).join('')}</div>
+   <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">${ps.length>3?`Aperçu des 3 premières sur ${ps.length}. `:''}Une page A4 paysage par accréditation, recto et verso côte à côte, traits de coupe en pointillés. Si la fenêtre d'impression ne s'ouvre pas dans cet aperçu en ligne, ouvrez le fichier <b>index.html</b> du ZIP dans votre navigateur.</p>`,
+  `<button class="btn" onclick="closeOv(this)">Fermer</button><button class="btn" onclick="window.print()">Lancer l'impression</button>${PRN.length?`<button class="btn p" onclick="printDone()">Confirmer ${PRN.length} imprimée(s)</button>`:''}`,1);
+}
+function printDone(){PRN.forEach(id=>setSt(id,'PRT',null,1));log('Impression',`Lot de ${PRN.length} accréditation(s) imprimé`);const n=PRN.length;PRN=[];SEL.clear();closeAll();render();toast(n+' accréditation(s) marquée(s) imprimée(s)')}
+
+/* ============ Rapports ============ */
+const REP={
+ cat:['Synthèse par catégorie','Effectifs par catégorie et par statut',()=>[['Catégorie',...Object.values(ST),'Total'],...S.cats.map(c=>{const a=S.persons.filter(p=>p.cat===c.c);return[c.l,...Object.keys(ST).map(s=>a.filter(p=>p.st===s).length),a.length]}),['Total',...Object.keys(ST).map(s=>S.persons.filter(p=>p.st===s).length),S.persons.length]]],
+ org:['Synthèse par organisation','Dossiers, approbations et anomalies par organisation',()=>{const m={};S.persons.forEach(p=>{const o=m[p.org]=m[p.org]||[p.org,cat(p.cat).l,0,0,0,0];o[2]++;if(['APP','PRT','DLV'].includes(p.st))o[3]++;if(['PRT','DLV'].includes(p.st))o[4]++;if(p.st!=='REJ'&&blocking(p).length)o[5]++});return[['Organisation','Catégorie principale','Dossiers','Approuvés','Imprimés','Avec anomalie bloquante'],...Object.values(m).sort((a,b)=>b[2]-a[2])]}],
+ zone:['Accès par zone et privilège','Nombre de personnes autorisées (dossiers approuvés ou plus)',()=>{const a=S.persons.filter(p=>['APP','PRT','DLV'].includes(p.st));return[['Type','Code','Libellé','Personnes autorisées','Dont ajouts individuels'],...S.zones.map(z=>['Zone',z.c,z.n,a.filter(p=>eff(p).z.some(x=>x.c===z.c)).length,a.filter(p=>p.xz.includes(z.c)).length]),...S.privs.map(x=>['Privilège',x.c,x.n,a.filter(p=>eff(p).p.some(y=>y.c===x.c)).length,a.filter(p=>p.xp.includes(x.c)).length]),['Service','—','Restauration',a.filter(p=>eff(p).m).length,a.filter(p=>p.xm).length]]}],
+ qual:['Qualité des données','Liste des dossiers présentant au moins une anomalie',()=>[['N° dossier','Nom','Prénom','Catégorie','Organisation','Statut','Anomalies bloquantes','Points d\'attention'],...S.persons.filter(p=>p.st!=='REJ'&&issues(p).length).map(p=>[p.id,p.ln,p.fn,cat(p.cat).l,p.org,ST[p.st],blocking(p).map(k=>rule(k)[1]).join(' | '),issues(p).filter(k=>!rule(k)[2]).map(k=>rule(k)[1]).join(' | ')])]],
+ acc:['Ajouts d\'accès','Toutes les demandes d\'ajout et leur décision',()=>[['Réf.','N° dossier','Titulaire','Catégorie','Type','Code','Justification','Demandé par','Date','État','Décidé par'],...S.reqs.map(q=>{const p=P(q.pid);return[q.id,q.pid,nm(p),p?cat(p.cat).l:'',{zone:'Zone',priv:'Privilège',meal:'Restauration'}[q.type],q.code,q.motif,q.by,fmtT(q.t),RQ[q.st],q.dec]})]],
+ man:['Manifeste d\'impression','Accréditations approuvées, imprimées et remises',()=>[['N° dossier','Nom','Prénom','Catégorie','Organisation','Zones','Privilèges','Restauration','État'],...S.persons.filter(p=>['APP','PRT','DLV'].includes(p.st)).map(p=>{const e=eff(p);return[p.id,p.ln,p.fn,cat(p.cat).l,p.org,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',ST[p.st]]})]],
+ full:['Extraction complète','Tous les dossiers, tous les champs',()=>[HEAD,...S.persons.map(line)]],
+ priv:['Rôles et privilèges','Utilisateurs, rôles et permissions associées',()=>[['Utilisateur','E-mail','Rôle','Organisation','Actif',...PERMS.map(p=>p[1])],...S.users.map(u=>[u.n,u.e,u.role,u.org,u.on?'oui':'non',...PERMS.map(p=>(S.roles[u.role]||[]).includes(p[0])?'oui':'non')])]],
+ aud:['Journal d\'audit','Historique des actions',()=>[['Date','Utilisateur','Domaine','Détail','N° dossier'],...S.audit.map(a=>[fmtT(a.t),a.u,a.a,a.d,a.pid])]]
+};
+function runExport(k){exportFile('rapport_'+k+'_'+new Date().toISOString().slice(0,10)+'.csv',csv(REP[k][2]()))}
+V.rep=()=>{
+  const r=REP[UI.rep],d=r[2](),ex=can('export');
+  return `<div class="rep" style="margin-bottom:16px">${Object.entries(REP).map(([k,v])=>`<button class="${UI.rep===k?'on':''}" onclick="UI.rep='${k}';render()"><b>${v[0]}</b><span>${v[1]}</span></button>`).join('')}</div>
+  <div class="card"><div class="card-h"><div><h3>${r[0]}</h3><span style="font-size:12px;color:var(--ink3)">${d.length-1} ligne(s) · ${fmtT(Date.now())}</span></div><span class="sp"></span>
+   ${ex?`<button class="btn p" onclick="runExport('${UI.rep}')">Exporter en CSV</button><button class="btn" onclick="exportFile('sauvegarde_ndage_acr.json',JSON.stringify(S,(k,v)=>k==='photo'?'':v,1))">Sauvegarde complète (JSON)</button>`:'<span style="color:var(--ink3)">Export non autorisé pour votre rôle</span>'}</div>
+  <div class="tw"><table class="t"><thead><tr>${d[0].map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${d.slice(1,61).map(l=>`<tr>${l.map(v=>`<td${typeof v==='number'?' class="num r"':''}>${esc(v)}</td>`).join('')}</tr>`).join('')||`<tr><td class="empty" colspan="${d[0].length}">Aucune donnée.</td></tr>`}</tbody></table></div>
+  ${d.length>61?`<div class="pg">60 premières lignes affichées sur ${d.length-1}. L'export contient la totalité.</div>`:''}</div>`;
+};
+
+/* ============ Utilisateurs & rôles ============ */
+V.users=()=>{
+  const ad=can('admin'),dis=ad?'':'disabled';
+  return `<div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Utilisateurs</h3><span class="sp"></span>${ad?`<button class="btn p" onclick="userEdit('')">Ajouter un utilisateur</button>`:''}</div>
+  <div class="tw"><table class="t"><thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Organisation</th><th>État</th><th></th></tr></thead><tbody>${S.users.map(u=>`<tr><td><b>${esc(u.n)}</b></td><td>${esc(u.e)}</td><td>${esc(u.role)}</td><td>${esc(u.org)}</td><td>${u.on?'<span class="pill s-APP">Actif</span>':'<span class="pill s-DRAFT">Désactivé</span>'}</td><td class="r">${ad?`<button class="btn sm" onclick="userEdit('${u.id}')">Modifier</button>`:''}</td></tr>`).join('')}</tbody></table></div></div>
+  <div class="card"><div class="card-h"><div><h3>Privilèges par rôle</h3><span style="font-size:12px;color:var(--ink3)">Chaque case ouvre ou ferme réellement l'action correspondante dans l'application.</span></div><span class="sp"></span>${ad?`<button class="btn" onclick="roleAdd()">Nouveau rôle</button><button class="btn" onclick="resetAsk()">Réinitialiser la démo</button>`:''}</div>
+  <div class="tw"><table class="t mx"><thead><tr><th>Rôle</th>${PERMS.map(p=>`<th style="white-space:normal;min-width:86px">${p[1]}</th>`).join('')}</tr></thead><tbody>${Object.keys(S.roles).map(r=>`<tr><td><b>${esc(r)}</b><small>${S.users.filter(u=>u.role===r).length} utilisateur(s)</small></td>${PERMS.map(p=>`<td><input type="checkbox" ${r==='Administrateur'?'disabled':dis} ${S.roles[r].includes(p[0])?'checked':''} onchange="permTgl(this.dataset.r,'${p[0]}')" data-r="${esc(r)}" aria-label="${esc(r)} : ${p[1]}"></td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+};
+function permTgl(r,k){const a=S.roles[r],i=a.indexOf(k);i<0?a.push(k):a.splice(i,1);log('Utilisateurs',`Rôle ${r} : « ${PERMS.find(p=>p[0]===k)[1]} » ${i<0?'accordé':'retiré'}`);render()}
+function roleAdd(){modal('Nouveau rôle',`<div class="fld"><label for="ro-n">Nom du rôle</label><input class="inp" id="ro-n"></div><p style="font-size:12px;color:var(--ink3);margin:8px 0 0">Créé avec la seule permission de consultation ; cochez ensuite les privilèges voulus.</p>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="const n=$('#ro-n').value.trim();if(!n||S.roles[n]){toast('Nom vide ou déjà utilisé');return}S.roles[n]=['view'];log('Utilisateurs','Rôle créé : '+n);closeAll();render()">Créer</button>`)}
+function userEdit(id){const u=S.users.find(x=>x.id===id)||{n:'',e:'',role:'Lecture seule',org:'',on:1};
+  modal(id?'Modifier l\'utilisateur':'Ajouter un utilisateur',`<div class="form"><div class="fld"><label for="u-n">Nom complet</label><input class="inp" id="u-n" value="${esc(u.n)}"></div><div class="fld"><label for="u-e">E-mail</label><input class="inp" id="u-e" type="email" value="${esc(u.e)}"></div>
+   <div class="fld"><label for="u-r">Rôle</label><select class="inp" id="u-r">${opt(Object.keys(S.roles),u.role)}</select></div><div class="fld"><label for="u-o">Organisation</label><input class="inp" id="u-o" value="${esc(u.org)}"></div>
+   <label class="full" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="u-on" ${u.on?'checked':''}> Compte actif</label></div>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="userSave('${id}')">Enregistrer</button>`)}
+function userSave(id){const n=$('#u-n').value.trim(),e=$('#u-e').value.trim();if(!n||!e){toast('Nom et e-mail obligatoires');return}
+  let u=S.users.find(x=>x.id===id);if(!u){u={id:'u'+Date.now()};S.users.push(u)}
+  if(u.id===S.me&&!$('#u-on').checked){toast('Vous ne pouvez pas désactiver votre propre session');return}
+  Object.assign(u,{n,e,role:$('#u-r').value,org:$('#u-o').value.trim(),on:$('#u-on').checked?1:0});log('Utilisateurs',(id?'Modification de ':'Création de ')+n+' ('+u.role+')');closeAll();render()}
+function resetAsk(){modal('Réinitialiser les données de démonstration',`<p style="margin:0">Toutes les modifications faites dans ce navigateur seront effacées et le jeu de données d'origine sera rechargé.</p>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn bad" onclick="try{localStorage.removeItem(KEY)}catch(e){}S=seed();closeAll();go('dash');toast('Données réinitialisées')">Réinitialiser</button>`)}
+
+/* ============ Journal d'audit ============ */
+V.audit=()=>{
+  const q=UI.aq.toLowerCase(),rows=S.audit.filter(a=>!q||(a.u+' '+a.a+' '+a.d+' '+a.pid).toLowerCase().includes(q));
+  return `<div class="card"><div class="card-h"><input class="inp" id="a-q" placeholder="Filtrer : utilisateur, domaine, dossier…" value="${esc(UI.aq)}" oninput="UI.aq=this.value;render()" style="width:300px"><span class="sp"></span><span style="font-size:12px;color:var(--ink3)" class="num">${rows.length} entrée(s)</span>${can('export')?`<button class="btn" onclick="runExport('aud')">Exporter</button>`:''}</div>
+  <div class="tw"><table class="t"><thead><tr><th>Date</th><th>Utilisateur</th><th>Domaine</th><th>Détail</th><th>Dossier</th></tr></thead><tbody>${rows.slice(0,150).map(a=>`<tr${a.pid&&P(a.pid)?` class="row" onclick="openP('${a.pid}')"`:''}><td class="num" style="white-space:nowrap">${fmtT(a.t)}</td><td>${esc(a.u)}</td><td><span class="chip x">${esc(a.a)}</span></td><td>${esc(a.d)}</td><td class="num">${esc(a.pid)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Aucune entrée.</td></tr>'}</tbody></table></div></div>`;
+};
+
+/* ============ Démarrage ============ */
+load();
+(function(){const h=location.hash.slice(1);if(V[h])VIEW=h;render()})();
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(V[h]&&h!==VIEW)go(h)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=$('#ovs').lastElementChild;if(o)o.remove()}});
+</script>
+</body></html>
