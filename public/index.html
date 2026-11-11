@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Inter+Tight:wght@600;700;800&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
 :root{
   color-scheme:light;
@@ -221,7 +222,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   <aside class="side">
     <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-f">DG Groupe · v14<br>Données de démonstration</div>
+    <div class="side-f">DG Groupe · v15<br>Données de démonstration</div>
   </aside>
   <div class="wrap">
     <header class="top" id="top"></header>
@@ -424,7 +425,7 @@ function tgl(id){SEL.has(id)?SEL.delete(id):SEL.add(id);render()}
 function selPage(on){CUR.slice((F.page-1)*25,F.page*25).forEach(p=>on?SEL.add(p.id):SEL.delete(p.id));render()}
 const HEAD=['numero','nom','prenom','sexe','date_naissance','nationalite','categorie','organisation','fonction','adresse','telephone','email','statut','verification','zones','privileges','restauration','anomalies'];
 const line=p=>{const e=eff(p);return[p.id,p.ln,p.fn,p.sx,p.dob,p.nat,cat(p.cat).l,p.org,p.fct,p.addr,p.tel,p.email,ST[p.st],p.bg,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',issues(p).map(k=>rule(k)[1]).join(' | ')]};
-function exportCur(){exportFile('dossiers_'+VIEW+'.csv',csv([HEAD,...CUR.map(line)]))}
+function exportCur(){xlsxOut('dossiers_'+VIEW,()=>[{title:TITLES[VIEW],rows:[HEAD_FR,...CUR.map(line)]}])}
 
 /* ============ Fiche dossier ============ */
 function openP(id){
@@ -520,7 +521,7 @@ V.revue=()=>{
    ${RULES.map(r=>{const n=live.filter(p=>issues(p).includes(r[0])).length;return `<button class="kpi" onclick="UI.rule='${r[0]}';render()" style="${UI.rule===r[0]?'border-color:var(--blue)':''}"><small>${r[1]}</small><b class="num" style="color:${n?(r[2]?'var(--bad)':'var(--warn)'):'var(--ink3)'}">${n}</b><em>${r[2]?'bloquant':'attention'}</em></button>`}).join('')}</div>
   <div class="card"><div class="card-h"><h3>${UI.rule?esc(rule(UI.rule)[1])+' — tous statuts':'Dossiers soumis à valider'}</h3><span class="sp"></span>
    ${can('review')&&!UI.rule&&clean.length?`<button class="btn ok" onclick="approveClean()">Approuver les ${clean.length} dossiers conformes</button>`:''}
-   ${can('export')?`<button class="btn" onclick="CUR=RV;exportFile('revue_donnees.csv',csv([HEAD,...RV.map(line)]))">Exporter</button>`:''}</div>
+   ${can('export')?`<button class="btn" onclick="xlsxOut('revue_donnees',()=>[{title:'Revue des données',rows:[HEAD_FR,...RV.map(line)]}])">Exporter (Excel)</button>`:''}</div>
    <div class="tw"><table class="t"><thead><tr><th>Titulaire</th><th>Catégorie</th><th>Organisation</th><th>Anomalies</th><th>Statut</th><th></th></tr></thead><tbody>
    ${(RV=rows).slice(0,80).map(p=>`<tr class="row" onclick="openP('${p.id}')"><td><b>${esc(nm(p))}</b><small class="num">${p.id}</small></td><td>${esc(cat(p.cat).l)}</td><td>${esc(p.org)}</td><td>${issChips(p)}</td><td>${pill(p.st)}</td>
     <td class="r" onclick="event.stopPropagation()" style="white-space:nowrap">${can('review')&&p.st==='SUB'?`<button class="btn sm" ${blocking(p).length?'disabled title="Anomalie bloquante"':''} onclick="setSt('${p.id}','APP',null,1)&&(render(),toast('Dossier approuvé'))">Approuver</button> <button class="btn sm" onclick="askWhy('${p.id}','RET')">Renvoyer</button>`:''}${can('review')&&issues(p).length?` <button class="btn sm" onclick="notifyAsk('${p.id}')">Notifier</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Rien à traiter.</td></tr>'}
@@ -653,10 +654,11 @@ function printIds(ids,specimen){
   $('#printarea').innerHTML=ps.map(p=>`<div class="sheet">${badge(p)}${badge(p,1)}</div>`).join('');
   closeAll();
   modal(`Impression — ${ps.length} accréditation(s)`,`<div class="pair" style="max-height:52vh;overflow:auto">${ps.slice(0,3).map(p=>`<div style="display:flex;gap:10px;--bs:6.5px">${badge(p)}${badge(p,1)}</div>`).join('')}</div>
-   <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">${ps.length>3?`Aperçu des 3 premières sur ${ps.length}. `:''}Format A5 (148 × 210 mm) : une page A4 paysage par accréditation, recto et verso côte à côte, à couper au milieu. Le PDF (une page A5 par face) est téléchargé en même temps que l'impression.</p>`,
-  `<button class="btn" onclick="closeOv(this)">Fermer</button><button class="btn" onclick="savePdf(PRL)">Télécharger le PDF</button><button class="btn p" onclick="savePdf(PRL);window.print()">Imprimer + PDF</button>${PRN.length?`<button class="btn ok" onclick="printDone()">Confirmer ${PRN.length} imprimée(s)</button>`:''}`,1);
+   <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">${ps.length>3?`Aperçu des 3 premières sur ${ps.length}. `:''}Format A5 (148 × 210 mm) : une page A4 paysage par accréditation, recto et verso côte à côte, à couper au milieu. Le PDF (une page A5 par face) est téléchargé en même temps que l'impression, et les accréditations passent automatiquement au statut « Imprimé ».</p>`,
+  `<button class="btn" onclick="closeOv(this)">Fermer</button><button class="btn" onclick="savePdf(PRL)">Télécharger le PDF</button><button class="btn p" onclick="printNow()">Imprimer + PDF</button>`,1);
 }
-function printDone(){PRN.forEach(id=>setSt(id,'PRT',null,1));log('Impression',`Lot de ${PRN.length} accréditation(s) imprimé`);const n=PRN.length;PRN=[];SEL.clear();closeAll();render();toast(n+' accréditation(s) marquée(s) imprimée(s)')}
+function printNow(){savePdf(PRL);window.print();if(PRN.length)printDone();else closeAll()}
+function printDone(){PRN.forEach(id=>setSt(id,'PRT',null,1));log('Impression',`Lot de ${PRN.length} accréditation(s) imprimé`);const n=PRN.length;PRN=[];SEL.clear();closeAll();render();toast(n+' accréditation(s) passée(s) automatiquement à « Imprimé »')}
 
 /* ============ Rapports ============ */
 const REP={
@@ -666,16 +668,45 @@ const REP={
  qual:['Qualité des données','Liste des dossiers présentant au moins une anomalie',()=>[['N° dossier','Nom','Prénom','Catégorie','Organisation','Statut','Anomalies bloquantes','Points d\'attention'],...S.persons.filter(p=>p.st!=='REJ'&&issues(p).length).map(p=>[p.id,p.ln,p.fn,cat(p.cat).l,p.org,ST[p.st],blocking(p).map(k=>rule(k)[1]).join(' | '),issues(p).filter(k=>!rule(k)[2]).map(k=>rule(k)[1]).join(' | ')])]],
  acc:['Ajouts d\'accès','Toutes les demandes d\'ajout et leur décision',()=>[['Réf.','N° dossier','Titulaire','Catégorie','Type','Code','Justification','Demandé par','Date','État','Décidé par'],...S.reqs.map(q=>{const p=P(q.pid);return[q.id,q.pid,nm(p),p?cat(p.cat).l:'',{zone:'Zone',priv:'Privilège',meal:'Restauration'}[q.type],q.code,q.motif,q.by,fmtT(q.t),RQ[q.st],q.dec]})]],
  man:['Manifeste d\'impression','Accréditations approuvées, imprimées et remises',()=>[['N° dossier','Nom','Prénom','Catégorie','Organisation','Zones','Privilèges','Restauration','État'],...S.persons.filter(p=>['APP','PRT','DLV'].includes(p.st)).map(p=>{const e=eff(p);return[p.id,p.ln,p.fn,cat(p.cat).l,p.org,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',ST[p.st]]})]],
- full:['Extraction complète','Tous les dossiers, tous les champs',()=>[HEAD,...S.persons.map(line)]],
+ full:['Extraction complète','Tous les dossiers, tous les champs',()=>[HEAD_FR,...S.persons.map(line)]],
  priv:['Rôles et privilèges','Utilisateurs, rôles et permissions associées',()=>[['Utilisateur','E-mail','Rôle','Organisation','Actif',...PERMS.map(p=>p[1])],...S.users.map(u=>[u.n,u.e,u.role,u.org,u.on?'oui':'non',...PERMS.map(p=>(S.roles[u.role]||[]).includes(p[0])?'oui':'non')])]],
  aud:['Journal d\'audit','Historique des actions',()=>[['Date','Utilisateur','Domaine','Détail','N° dossier'],...S.audit.map(a=>[fmtT(a.t),a.u,a.a,a.d,a.pid])]]
 };
-function runExport(k){exportFile('rapport_'+k+'_'+new Date().toISOString().slice(0,10)+'.csv',csv(REP[k][2]()))}
+function runExport(k){xlsxOut('rapport_'+k,()=>[{title:REP[k][0],rows:REP[k][2]()}])}
+function exportAll(){xlsxOut('classeur_complet',()=>Object.values(REP).map(r=>({title:r[0],rows:r[2]()})))}
+const HEAD_FR=['N° dossier','Nom','Prénom','Sexe','Date de naissance','Nationalité','Catégorie','Organisation','Fonction','Adresse','Téléphone','E-mail','Statut','Vérification','Zones','Privilèges','Restauration','Anomalies'];
+/* Export Excel : relit d'abord la base, puis écrit un classeur typé (nombres, dates) avec en-têtes figés et filtres. */
+async function xlsxOut(name,build){
+  if(!window.ExcelJS){toast('Export Excel indisponible : le générateur n\'a pas pu être chargé');return}
+  toast('Préparation du fichier Excel…');
+  try{await flushNow();if(!await reload())return;
+    const sheets=build(),now=new Date(),wb=new ExcelJS.Workbook();wb.creator=me().n;wb.created=now;
+    const conv=v=>{if(typeof v==='number')return v;v=String(v??'');if(!v)return null;let m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);if(m)return new Date(Date.UTC(+m[1],m[2]-1,+m[3]));
+      m=v.match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/);if(m)return new Date(Date.UTC(+m[3],m[2]-1,+m[1],+m[4],+m[5]));return v};
+    const info=wb.addWorksheet('Informations');info.columns=[{width:30},{width:70}];
+    [['Événement',S.tpl.ev],['Export',sheets.map(x=>x.title).join(', ')],['Généré le',now.toLocaleString('fr-FR')],['Généré par',me().n+' ('+me().role+')'],
+     ['Source','Base de données de la plateforme, relue au moment de l\'export'],['Dossiers en base',S.persons.length],[],['Feuille','Lignes de données'],...sheets.map(x=>[x.title,x.rows.length-1])].forEach(r=>info.addRow(r));
+    info.getColumn(1).font={bold:true};info.getRow(8).font={bold:true};
+    const used=new Set(['informations']);
+    sheets.forEach(sh=>{let nm=sh.title.replace(/[\[\]:*?\/\\']/g,' ').slice(0,31).trim(),i=2;while(used.has(nm.toLowerCase()))nm=nm.slice(0,28)+' '+i++;used.add(nm.toLowerCase());
+      const ws=wb.addWorksheet(nm,{views:[{state:'frozen',ySplit:1}]}),H=sh.rows[0],n=H.length;
+      ws.addRow(H);sh.rows.slice(1).forEach(r=>ws.addRow(r.map(conv)));
+      const hr=ws.getRow(1);hr.height=22;for(let c=1;c<=n;c++){const cell=hr.getCell(c);cell.font={bold:true,color:{argb:'FFFFFFFF'}};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1D4ED8'}};cell.alignment={vertical:'middle',wrapText:true}}
+      ws.autoFilter={from:{row:1,column:1},to:{row:1,column:n}};
+      for(let c=1;c<=n;c++){let w=String(H[c-1]).length,dt=0,dtm=0;sh.rows.slice(1,400).forEach(r=>{const v=r[c-1];w=Math.max(w,String(v??'').length);if(/^\d{4}-\d{2}-\d{2}$/.test(v))dt=1;if(/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/.test(v))dtm=1});
+        const col=ws.getColumn(c);col.width=Math.min(60,Math.max(10,w+3));if(dt)col.numFmt='dd/mm/yyyy';if(dtm)col.numFmt='dd/mm/yyyy hh:mm'}
+      if(/^Total$/i.test(String(sh.rows[sh.rows.length-1][0])))ws.getRow(sh.rows.length).font={bold:true}});
+    const buf=await wb.xlsx.writeBuffer(),file=name+'_'+now.toISOString().slice(0,10)+'.xlsx';XLAST={file,size:buf.byteLength};
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download=file;document.body.appendChild(a);a.click();a.remove();
+    log('Export',file+' ('+sheets.reduce((t,x)=>t+x.rows.length-1,0)+' lignes)');toast('Fichier Excel téléchargé : '+file);
+  }catch(e){console.error(e);toast('Export Excel impossible')}
+}
+let XLAST=null;
 V.rep=()=>{
   const r=REP[UI.rep],d=r[2](),ex=can('export');
   return `<div class="rep" style="margin-bottom:16px">${Object.entries(REP).map(([k,v])=>`<button class="${UI.rep===k?'on':''}" onclick="UI.rep='${k}';render()"><b>${v[0]}</b><span>${v[1]}</span></button>`).join('')}</div>
   <div class="card"><div class="card-h"><div><h3>${r[0]}</h3><span style="font-size:12px;color:var(--ink3)">${d.length-1} ligne(s) · ${fmtT(Date.now())}</span></div><span class="sp"></span>
-   ${ex?`<button class="btn p" onclick="runExport('${UI.rep}')">Exporter en CSV</button><button class="btn" onclick="exportFile('sauvegarde_ndage_acr.json',JSON.stringify(S,(k,v)=>k==='photo'?'':v,1))">Sauvegarde complète (JSON)</button>`:'<span style="color:var(--ink3)">Export non autorisé pour votre rôle</span>'}</div>
+   ${ex?`<button class="btn p" onclick="runExport('${UI.rep}')">Exporter ce rapport (Excel)</button><button class="btn" onclick="exportAll()">Classeur complet (Excel)</button><button class="btn" onclick="exportFile('sauvegarde_ndage_acr.json',JSON.stringify(S,(k,v)=>k==='photo'?'':v,1))">Sauvegarde complète (JSON)</button>`:'<span style="color:var(--ink3)">Export non autorisé pour votre rôle</span>'}</div>
   <div class="tw"><table class="t"><thead><tr>${d[0].map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${d.slice(1,61).map(l=>`<tr>${l.map(v=>`<td${typeof v==='number'?' class="num r"':''}>${esc(v)}</td>`).join('')}</tr>`).join('')||`<tr><td class="empty" colspan="${d[0].length}">Aucune donnée.</td></tr>`}</tbody></table></div>
   ${d.length>61?`<div class="pg">60 premières lignes affichées sur ${d.length-1}. L'export contient la totalité.</div>`:''}</div>`;
 };
