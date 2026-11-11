@@ -9,7 +9,7 @@ Application web d'accréditation hébergée sur Vercel, avec base PostgreSQL.
 - Notification par e-mail des dossiers incomplets (à la personne ou au représentant d'organisation)
 - Populations : athlètes & équipes, fédérations internationales et nationales, staff, médias, volontaires
 - Matrice d'accès (zones / privilèges par catégorie) et ajouts d'accès individuels
-- Template d'accréditation (recto / verso) et impression par lots au format A5, avec export PDF
+- Template d'accréditation (recto / verso) et impression par lots (une feuille A5 paysage par accréditation, recto et verso côte à côte), avec export PDF
 - Rapports & exports CSV, import en masse
 - Utilisateurs & rôles, journal d'audit
 

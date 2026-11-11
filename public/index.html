@@ -196,13 +196,13 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   .pair .bdg{font-size:7px}
 }
 @media print{
-  @page{size:A4 landscape;margin:0}
+  @page{size:A5 landscape;margin:0}
   html,body{height:auto;background:#fff}
   body>*:not(#printarea){display:none!important}
   #printarea{display:block}
   .sheet{display:flex;gap:0;justify-content:center;align-items:flex-start;page-break-after:always;break-after:page}
   .sheet .bdg+.bdg{border-left:.2mm dashed #999}
-  .sheet .bdg{font-size:4.55mm;border:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sheet .bdg{font-size:3.21mm;border:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 </head>
@@ -222,7 +222,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   <aside class="side">
     <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-f">DG Groupe · v16<br>Données de démonstration</div>
+    <div class="side-f">DG Groupe · v17<br>Données de démonstration</div>
   </aside>
   <div class="wrap">
     <header class="top" id="top"></header>
@@ -630,7 +630,7 @@ V.tpl=()=>{
    <div class="card"><div class="card-h"><h3>Bandeau par catégorie</h3></div><div class="tw"><table class="t"><tbody>${S.cats.map((c,i)=>`<tr><td style="width:44px"><input type="color" ${dis} value="${c.col}" onchange="S.cats[${i}].col=this.value;save();render()" aria-label="Couleur ${esc(c.l)}" style="width:30px;height:26px;padding:0;border:0;background:none"></td><td><small>${esc(c.l)}</small><input class="inp" ${dis} value="${esc(c.b)}" onchange="S.cats[${i}].b=this.value.toUpperCase();save();render()" aria-label="Libellé du bandeau ${esc(c.l)}" style="width:100%"></td></tr>`).join('')}</tbody></table></div></div>
   </div>
   <div class="card"><div class="card-h"><h3>Recto et verso</h3><span class="sp"></span><span style="font-size:12px;color:var(--ink3)">Zones et privilèges issus de la matrice d'accès</span></div><div class="card-b"><div class="pair" style="--bs:10.5px">${badge(p)}${badge(p,1)}</div>
-   <p style="font-size:12.5px;color:var(--ink2);margin:14px 0 0">Format A5 (148 × 210 mm). Structure reprise du modèle fourni : photo en haut à gauche, bandeau de catégorie, nom, fonction, pictogramme restauration, numéro et QR code, cases de zones, bande de privilèges ; au verso, identité, légende des zones et des privilèges, bande répétée. Les zones hors compétition sont encadrées au lieu d'être pleines.</p></div></div></div>
+   <p style="font-size:12.5px;color:var(--ink2);margin:14px 0 0">Format : une feuille A5 paysage (210 × 148 mm) porte le recto et le verso côte à côte. Structure reprise du modèle fourni : photo en haut à gauche, bandeau de catégorie, nom, fonction, pictogramme restauration, numéro et QR code, cases de zones, bande de privilèges ; au verso, identité, légende des zones et des privilèges, bande répétée. Les zones hors compétition sont encadrées au lieu d'être pleines.</p></div></div></div>
   <style>@media (max-width:1100px){#tpl-g{grid-template-columns:1fr!important}}</style>`;
 };
 function tplSet(k,v){S.tpl[k]=v;log('Template','Réglage « '+k+' » modifié');render()}
@@ -656,7 +656,7 @@ function printIds(ids,specimen){
   $('#printarea').innerHTML=ps.map(p=>`<div class="sheet">${badge(p)}${badge(p,1)}</div>`).join('');
   closeAll();
   modal(`Impression — ${ps.length} accréditation(s)`,`<div class="pair" style="max-height:52vh;overflow:auto">${ps.slice(0,3).map(p=>`<div style="display:flex;gap:10px;--bs:6.5px">${badge(p)}${badge(p,1)}</div>`).join('')}</div>
-   <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">${ps.length>3?`Aperçu des 3 premières sur ${ps.length}. `:''}Format A5 (148 × 210 mm) : une page A4 paysage par accréditation, recto et verso côte à côte, à couper au milieu. Le PDF (une page A5 par face) est téléchargé en même temps que l'impression, et les accréditations passent automatiquement au statut « Imprimé ».</p>`,
+   <p style="margin:12px 0 0;font-size:12.5px;color:var(--ink2)">${ps.length>3?`Aperçu des 3 premières sur ${ps.length}. `:''}Une feuille A5 paysage (210 × 148 mm) par accréditation, recto et verso côte à côte, à plier ou couper au milieu. Le PDF (même mise en page) est téléchargé en même temps que l'impression, et les accréditations passent automatiquement au statut « Imprimé ».</p>`,
   `<button class="btn" onclick="closeOv(this)">Fermer</button><button class="btn" onclick="savePdf(PRL)">Télécharger le PDF</button><button class="btn p" onclick="printNow()">Imprimer + PDF</button>`,1);
 }
 function printNow(){savePdf(PRL);window.print();if(PRN.length)printDone();else closeAll()}
@@ -742,15 +742,15 @@ V.audit=()=>{
   <div class="tw"><table class="t"><thead><tr><th>Date</th><th>Utilisateur</th><th>Domaine</th><th>Détail</th><th>Dossier</th></tr></thead><tbody>${rows.slice(0,150).map(a=>`<tr${a.pid&&P(a.pid)?` class="row" onclick="openP('${a.pid}')"`:''}><td class="num" style="white-space:nowrap">${fmtT(a.t)}</td><td>${esc(a.u)}</td><td><span class="chip x">${esc(a.a)}</span></td><td>${esc(a.d)}</td><td class="num">${esc(a.pid)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">Aucune entrée.</td></tr>'}</tbody></table></div></div>`;
 };
 
-/* ============ PDF (A5, une page par face) ============ */
-function pdfBadge(doc,p,back){
-  const U=148/32.5,c=cat(p.cat),e=eff(p),T=S.tpl,rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+/* ============ PDF (une page A5 paysage par accréditation : recto et verso côte à côte) ============ */
+function pdfBadge(doc,p,back,O){
+  const U=105/32.5,c=cat(p.cat),e=eff(p),T=S.tpl,rgb=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
   const txt=(t,X,Y,size,o={})=>{t=String(t??'');doc.setFont('helvetica',o.b?'bold':'normal');let pt=size*U*2.8346;doc.setFontSize(pt);
-    if(o.max)while(doc.getTextWidth(t)>o.max*U&&pt>4){pt-=.4;doc.setFontSize(pt)}doc.setTextColor(...(o.col||[0,0,0]));doc.text(t,X*U,Y*U,{align:o.al||'left'})};
-  const rect=(X,Y,W,H,fill,stroke)=>{if(fill)doc.setFillColor(...fill);if(stroke){doc.setDrawColor(0,0,0);doc.setLineWidth(.12*U)}doc.rect(X*U,Y*U,W*U,H*U,fill&&stroke?'FD':fill?'F':'S')};
-  const photo=(X,Y,W,H)=>{if(p.photo){try{doc.addImage(p.photo,/png/i.test(p.photo.slice(0,20))?'PNG':'JPEG',X*U,Y*U,W*U,H*U);return}catch(x){}}
-    rect(X,Y,W,H,[233,237,243]);doc.setFillColor(195,203,216);doc.circle((X+W/2)*U,(Y+H*.38)*U,W*.2*U,'F');doc.roundedRect((X+W*.12)*U,(Y+H*.68)*U,W*.76*U,H*.32*U,W*.3*U,W*.3*U,'F');doc.rect((X+W*.12)*U,(Y+H*.86)*U,W*.76*U,H*.14*U,'F')};
-  const fork=(X,Y,Sz)=>{rect(X,Y,Sz,Sz,[255,255,255],1);doc.setDrawColor(0,0,0);const l=(a,b,d,f,w)=>{doc.setLineWidth(w*Sz*U);doc.line((X+a*Sz)*U,(Y+b*Sz)*U,(X+d*Sz)*U,(Y+f*Sz)*U)};
+    if(o.max)while(doc.getTextWidth(t)>o.max*U&&pt>4){pt-=.4;doc.setFontSize(pt)}doc.setTextColor(...(o.col||[0,0,0]));doc.text(t,O+X*U,Y*U,{align:o.al||'left'})};
+  const rect=(X,Y,W,H,fill,stroke)=>{if(fill)doc.setFillColor(...fill);if(stroke){doc.setDrawColor(0,0,0);doc.setLineWidth(.12*U)}doc.rect(O+X*U,Y*U,W*U,H*U,fill&&stroke?'FD':fill?'F':'S')};
+  const photo=(X,Y,W,H)=>{if(p.photo){try{doc.addImage(p.photo,/png/i.test(p.photo.slice(0,20))?'PNG':'JPEG',O+X*U,Y*U,W*U,H*U);return}catch(x){}}
+    rect(X,Y,W,H,[233,237,243]);doc.setFillColor(195,203,216);doc.circle(O+(X+W/2)*U,(Y+H*.38)*U,W*.2*U,'F');doc.roundedRect(O+(X+W*.12)*U,(Y+H*.68)*U,W*.76*U,H*.32*U,W*.3*U,W*.3*U,'F');doc.rect(O+(X+W*.12)*U,(Y+H*.86)*U,W*.76*U,H*.14*U,'F')};
+  const fork=(X,Y,Sz)=>{rect(X,Y,Sz,Sz,[255,255,255],1);doc.setDrawColor(0,0,0);const l=(a,b,d,f,w)=>{doc.setLineWidth(w*Sz*U);doc.line(O+(X+a*Sz)*U,(Y+b*Sz)*U,O+(X+d*Sz)*U,(Y+f*Sz)*U)};
     l(.38,.2,.38,.8,.07);l(.3,.2,.3,.42,.045);l(.46,.2,.46,.42,.045);l(.3,.42,.46,.42,.045);l(.64,.2,.64,.8,.07);l(.67,.2,.67,.5,.12)};
   const bar=()=>{rect(2,38.4,28.5,5.4,rgb(T.bar));e.p.forEach((x,i)=>txt(x.c,2+28.5*(i+.5)/e.p.length,42.3,3.3,{al:'center',col:[255,255,255]}))};
   if(back){
@@ -767,12 +767,12 @@ function pdfBadge(doc,p,back){
   txt(p.fn+' '+p.ln.toUpperCase(),2,19.55,1.75,{max:28.5});txt(c.l,2,21.05,.98,{b:1,max:28.5});txt([p.fct,p.org].filter(Boolean).join(' · '),2,22.25,.98,{max:28.5});
   if(T.showM&&e.m)fork(8.6,28,2.6);
   txt(p.id,24.5,24.45,.92,{b:1});
-  try{const q=qrcode(0,'M');q.addData(String(p.id));q.make();const n=q.getModuleCount(),k=6/n;doc.setFillColor(0,0,0);for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(q.isDark(y,x))doc.rect((24.5+x*k)*U,(24.8+y*k)*U,k*U+.02,k*U+.02,'F')}catch(x){rect(24.5,24.8,6,6,null,1)}
+  try{const q=qrcode(0,'M');q.addData(String(p.id));q.make();const n=q.getModuleCount(),k=6/n;doc.setFillColor(0,0,0);for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(q.isDark(y,x))doc.rect(O+(24.5+x*k)*U,(24.8+y*k)*U,k*U+.02,k*U+.02,'F')}catch(x){rect(24.5,24.8,6,6,null,1)}
   if(T.showZ)e.z.forEach((z,i)=>{const X=2+(i%5)*5.94,Y=32.4+Math.floor(i/5)*3.24;rect(X,Y,4.44,2.24,z.o?[255,255,255]:[0,0,0],1);txt(z.c,X+2.22,Y+1.66,1.5,{b:1,al:'center',col:z.o?[0,0,0]:[255,255,255]})});
   bar();
 }
-function makePdf(ps){const doc=new window.jspdf.jsPDF({unit:'mm',format:'a5',orientation:'portrait'});
-  ps.forEach((p,i)=>{if(i)doc.addPage();pdfBadge(doc,p,0);doc.addPage();pdfBadge(doc,p,1)});return doc}
+function makePdf(ps){const doc=new window.jspdf.jsPDF({unit:'mm',format:'a5',orientation:'landscape'});
+  ps.forEach((p,i)=>{if(i)doc.addPage();pdfBadge(doc,p,0,0);pdfBadge(doc,p,1,105);doc.setDrawColor(150,150,150);doc.setLineWidth(.15);doc.setLineDashPattern([1.2,1.2],0);doc.line(105,0,105,148);doc.setLineDashPattern([],0)});return doc}
 function savePdf(ps){if(!ps||!ps.length)return;try{const n=ps.length===1?'accreditation_'+ps[0].id:'accreditations_'+ps.length+'_'+new Date().toISOString().slice(0,10);makePdf(ps).save(n+'.pdf');toast('PDF téléchargé : '+n+'.pdf')}
   catch(e){console.error(e);toast('PDF indisponible : le générateur n\'a pas pu être chargé')}}
 
