@@ -5,7 +5,7 @@ Application web d'accréditation hébergée sur Vercel, avec base PostgreSQL.
 ## Fonctions
 - Tableau de bord
 - Demandes, revue des données, vérifications
-- Invitations : lien personnel vers un formulaire public (nom, prénom, adresse, téléphone, photo, fonction)
+- Invitations : création automatique d'un compte Client (mot de passe généré, envoyé par e-mail) ; le client ne voit que son propre dossier (nom, prénom, adresse, téléphone, photo, fonction)
 - Notification par e-mail des dossiers incomplets (à la personne ou au représentant d'organisation)
 - Populations : athlètes & équipes, fédérations internationales et nationales, staff, médias, volontaires
 - Matrice d'accès (zones / privilèges par catégorie) et ajouts d'accès individuels
@@ -17,7 +17,7 @@ Application web d'accréditation hébergée sur Vercel, avec base PostgreSQL.
 | Dossier | Rôle |
 |---|---|
 | `public/index.html` | Interface (une seule page, sans framework) |
-| `api/` | Fonctions Vercel : `login`, `logout`, `state`, `sync`, `invite`, `form` (public), `notify`, `health` |
+| `api/` | Fonctions Vercel : `login`, `logout`, `state`, `sync`, `invite`, `form` (public), `me` (espace client), `notify`, `health` |
 | `lib/` | Connexion à la base, sessions, schéma, contrôle des droits, données initiales |
 | `db/schema.sql` | Schéma PostgreSQL (référence) |
 

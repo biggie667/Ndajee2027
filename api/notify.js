@@ -25,7 +25,7 @@ module.exports = handler('POST', async (req, res) => {
       if (!inv.rowCount) await c.query('INSERT INTO invitations (token_hash,email,category_code,organisation,person_id,created_by,last_sent_at) VALUES ($1,$2,$3,$4,$5,$6,now())', [t.hash, p.email, p.cat, p.org, p.id, user.name]);
       const editable = ['DRAFT', 'SUB', 'RET'].includes(p.st);
       text = `Bonjour ${p.fn},\n\nVotre dossier d'accréditation ${event} (n° ${p.id}) est incomplet. Points à régulariser :\n${points.join('\n')}\n\n` +
-        (editable ? `Vous pouvez mettre à jour vos informations et votre photo avec votre lien personnel :\n${linkFor(base, t.token)}\n\nPour une pièce d'identité ou tout autre élément, répondez à ce message ou contactez votre organisation.` : `Merci de contacter votre organisation ou le service accréditation pour régulariser.`) +
+        (editable ? `Vous pouvez mettre à jour vos informations et votre photo en vous connectant à votre compte sur ${base}/ ou avec ce lien personnel :\n${linkFor(base, t.token)}\n\nPour une pièce d'identité ou tout autre élément, répondez à ce message ou contactez votre organisation.` : `Merci de contacter votre organisation ou le service accréditation pour régulariser.`) +
         `\n\nL'équipe accréditation`;
     } else {
       to = (await c.query(`SELECT email FROM users WHERE active AND org=$1 AND role='Représentant d''organisation'`, [p.org])).rows.map(r => r.email);

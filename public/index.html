@@ -222,7 +222,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   <aside class="side">
     <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-f">DG Groupe · v15<br>Données de démonstration</div>
+    <div class="side-f">DG Groupe · v16<br>Données de démonstration</div>
   </aside>
   <div class="wrap">
     <header class="top" id="top"></header>
@@ -305,8 +305,10 @@ function flush(){TMR=0;SYNC=SYNC.then(async()=>{
   closeAll();await reload();toast('Non enregistré — '+(r.j.error||'erreur serveur'));
 }).catch(e=>console.error(e))}
 async function reload(){const r=await api('/api/state');if(r.status===401){showLogin();return false}if(!r.ok){showLogin(r.j.error||'Serveur indisponible.');return false}
-  S=r.j;LAST=snapOf();LOADED=Date.now();$('#login').hidden=true;$('#app').hidden=false;render();return true}
-function showLogin(msg){S=null;LAST=null;closeAll();$('#app').hidden=true;$('#login').hidden=false;$('#l-err').textContent=msg||'';$('#l-pw').value=''}
+  if(r.j.client){CL=r.j;S=null;LAST=null;await showForm('');return true}
+  CL=null;$('#pub').hidden=true;  S=r.j;LAST=snapOf();LOADED=Date.now();$('#login').hidden=true;$('#app').hidden=false;render();return true}
+let CL=null;
+function showLogin(msg){S=null;LAST=null;CL=null;closeAll();$('#pub').hidden=true;$('#app').hidden=true;$('#login').hidden=false;$('#l-err').textContent=msg||'';$('#l-pw').value=''}
 async function doLogin(ev){ev.preventDefault();const b=$('#l-btn');b.disabled=true;$('#l-err').textContent='';
   let r;try{r=await api('/api/login',{email:$('#l-em').value,password:$('#l-pw').value})}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
   b.disabled=false;if(!r.ok){$('#l-err').textContent=r.j.error||'Connexion impossible.';return}
@@ -717,7 +719,7 @@ V.users=()=>{
   return `<div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Utilisateurs</h3><span class="sp"></span>${ad?`<button class="btn p" onclick="userEdit('')">Ajouter un utilisateur</button>`:''}</div>
   <div class="tw"><table class="t"><thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Organisation</th><th>État</th><th></th></tr></thead><tbody>${S.users.map(u=>`<tr><td><b>${esc(u.n)}</b></td><td>${esc(u.e)}</td><td>${esc(u.role)}</td><td>${esc(u.org)}</td><td>${u.on?'<span class="pill s-APP">Actif</span>':'<span class="pill s-DRAFT">Désactivé</span>'}</td><td class="r">${ad?`<button class="btn sm" onclick="userEdit('${u.id}')">Modifier</button>`:''}</td></tr>`).join('')}</tbody></table></div></div>
   <div class="card"><div class="card-h"><div><h3>Privilèges par rôle</h3><span style="font-size:12px;color:var(--ink3)">Chaque case ouvre ou ferme réellement l'action correspondante dans l'application.</span></div><span class="sp"></span>${ad?`<button class="btn" onclick="roleAdd()">Nouveau rôle</button>`:''}</div>
-  <div class="tw"><table class="t mx"><thead><tr><th>Rôle</th>${PERMS.map(p=>`<th style="white-space:normal;min-width:86px">${p[1]}</th>`).join('')}</tr></thead><tbody>${Object.keys(S.roles).map(r=>`<tr><td><b>${esc(r)}</b><small>${S.users.filter(u=>u.role===r).length} utilisateur(s)</small></td>${PERMS.map(p=>`<td><input type="checkbox" ${r==='Administrateur'?'disabled':dis} ${S.roles[r].includes(p[0])?'checked':''} onchange="permTgl(this.dataset.r,'${p[0]}')" data-r="${esc(r)}" aria-label="${esc(r)} : ${p[1]}"></td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  <div class="tw"><table class="t mx"><thead><tr><th>Rôle</th>${PERMS.map(p=>`<th style="white-space:normal;min-width:86px">${p[1]}</th>`).join('')}</tr></thead><tbody>${Object.keys(S.roles).map(r=>`<tr><td><b>${esc(r)}</b><small>${S.users.filter(u=>u.role===r).length} utilisateur(s)${r==='Client'?' · uniquement son propre dossier':''}</small></td>${PERMS.map(p=>`<td><input type="checkbox" ${r==='Administrateur'||r==='Client'?'disabled':dis} ${S.roles[r].includes(p[0])?'checked':''} onchange="permTgl(this.dataset.r,'${p[0]}')" data-r="${esc(r)}" aria-label="${esc(r)} : ${p[1]}"></td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
 };
 function permTgl(r,k){const a=S.roles[r],i=a.indexOf(k);i<0?a.push(k):a.splice(i,1);log('Utilisateurs',`Rôle ${r} : « ${PERMS.find(p=>p[0]===k)[1]} » ${i<0?'accordé':'retiré'}`);render()}
 function roleAdd(){modal('Nouveau rôle',`<div class="fld"><label for="ro-n">Nom du rôle</label><input class="inp" id="ro-n"></div><p style="font-size:12px;color:var(--ink3);margin:8px 0 0">Créé avec la seule permission de consultation ; cochez ensuite les privilèges voulus.</p>`,
@@ -779,26 +781,26 @@ function copyTxt(t){navigator.clipboard.writeText(t).then(()=>toast('Copié'),()
 async function flushNow(){if(TMR){clearTimeout(TMR);flush()}await SYNC}
 V.inv=()=>{
   const L=S.invs||[];
-  return `<div class="note">Une invitation crée un <b>lien personnel</b>. La personne y renseigne uniquement son nom, son prénom, son adresse, son numéro de téléphone, sa photo et sa fonction, sans compte ni mot de passe. Le dossier arrive ensuite dans « Revue des données ».</div>
+  return `<div class="note">Une invitation crée automatiquement un <b>compte Client</b> (identifiant = son e-mail, mot de passe généré) et lui envoie ses accès. Une fois connectée, la personne renseigne uniquement son nom, son prénom, son adresse, son numéro de téléphone, sa photo et sa fonction, puis soumet sa demande ; elle ne voit rien d'autre de la plateforme. Le dossier arrive ensuite dans « Revue des données ».</div>
   <div class="kpis">${[['Invitations',L.length],['Dossiers déposés',L.filter(i=>i.done).length],['En attente',L.filter(i=>!i.done).length]].map(x=>`<div class="kpi" style="cursor:default"><small>${x[0]}</small><b class="num">${x[1]}</b></div>`).join('')}</div>
   <div class="card"><div class="card-h"><h3>Liens envoyés</h3><span class="sp"></span>${can('edit')?`<button class="btn p" onclick="invNew('')">Nouvelle invitation</button>`:''}</div>
   <div class="tw"><table class="t"><thead><tr><th>E-mail</th><th>Catégorie</th><th>Organisation</th><th>Créée par</th><th>Dernier envoi</th><th>État</th><th></th></tr></thead><tbody>
   ${L.map(i=>`<tr${i.pid&&P(i.pid)?` class="row" onclick="openP('${i.pid}')"`:''}><td><b>${esc(i.email)}</b></td><td>${esc(cat(i.cat).l)}</td><td>${esc(i.org)}</td><td>${esc(i.by)}</td><td class="num">${fmtT(i.t)}</td>
-   <td>${i.done?'<span class="pill s-APP">Dossier déposé</span>':'<span class="pill s-PEND">En attente</span>'}</td><td class="r" onclick="event.stopPropagation()">${can('edit')?`<button class="btn sm" onclick="invSend({resend:${i.id}})">Nouveau lien</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Aucune invitation pour le moment.</td></tr>'}</tbody></table></div></div>`;
+   <td>${i.done?'<span class="pill s-APP">Dossier déposé</span>':'<span class="pill s-PEND">En attente</span>'}</td><td class="r" onclick="event.stopPropagation()">${can('edit')?`<button class="btn sm" onclick="invSend({resend:${i.id}})">Nouveaux accès</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Aucune invitation pour le moment.</td></tr>'}</tbody></table></div></div>`;
 };
-function invNew(defCat){modal('Inviter par lien personnel',`<div class="form">
+function invNew(defCat){modal('Inviter et créer le compte Client',`<div class="form">
   <div class="fld full"><label for="i-em">Adresses e-mail (une par ligne, 50 maximum)</label><textarea class="inp" id="i-em" placeholder="prenom.nom@exemple.com"></textarea></div>
   <div class="fld"><label for="i-cat">Catégorie</label><select class="inp" id="i-cat">${opt(S.cats.map(c=>[c.c,c.l]),defCat||S.cats[0].c)}</select></div>
   <div class="fld"><label for="i-org">Organisation</label><input class="inp" id="i-org" list="i-orgs" value="${can('admin')?'':esc(me().org)}"><datalist id="i-orgs">${[...new Set(S.persons.map(x=>x.org))].sort().map(o=>`<option value="${esc(o)}">`).join('')}</datalist></div></div>
-  <p style="font-size:12px;color:var(--ink3);margin:10px 0 0">Chaque personne reçoit son propre lien. La catégorie et l'organisation sont fixées ici et ne sont pas modifiables par la personne.</p>`,
+  <p style="font-size:12px;color:var(--ink3);margin:10px 0 0">Chaque personne reçoit son identifiant, son mot de passe et un lien direct. La catégorie et l'organisation sont fixées ici et ne sont pas modifiables par la personne.</p>`,
   `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" id="i-go" onclick="invSend({emails:$('#i-em').value.split(/[\\n,;]+/).map(x=>x.trim()).filter(Boolean),cat:$('#i-cat').value,org:$('#i-org').value.trim()})">Créer et envoyer</button>`)}
 async function invSend(body){
   const b=$('#i-go');if(b)b.disabled=true;await flushNow();
   let r;try{r=await api('/api/invite',body)}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
   if(b)b.disabled=false;if(!r.ok){toast(r.j.error||'Erreur');return}
   closeAll();await reload();const R=r.j.results,ko=R.filter(x=>!x.sent);
-  modal(`Invitation${R.length>1?'s':''} créée${R.length>1?'s':''}`,`${ko.length?`<div class="note w"><b>${ko.length===R.length?'Aucun e-mail n\'a été envoyé automatiquement.':ko.length+' e-mail(s) non envoyé(s).'}</b> ${esc(ko[0].reason)} Copiez le lien et transmettez-le vous-même (e-mail, WhatsApp, SMS).</div>`:`<div class="note">E-mail${R.length>1?'s':''} envoyé${R.length>1?'s':''}. Le lien reste copiable ci-dessous.</div>`}
-   ${R.map((x,i)=>`<div><b>${esc(x.email)}</b> ${x.sent?'<span class="chip" style="background:var(--ok-bg);color:var(--ok)">envoyé</span>':'<span class="chip w">à transmettre</span>'}<div class="lnk"><input class="inp" readonly value="${esc(x.link)}" onfocus="this.select()" aria-label="Lien pour ${esc(x.email)}"><button class="btn sm" onclick="copyTxt(INVR[${i}].link)">Copier le lien</button>${x.sent?'':`<button class="btn sm" onclick="copyTxt(INVR[${i}].text)">Copier le message</button>`}</div></div>`).join('')}`,
+  modal(`Invitation${R.length>1?'s':''} créée${R.length>1?'s':''}`,`${ko.length?`<div class="note w"><b>${ko.length===R.length?'Aucun e-mail n\'a été envoyé automatiquement.':ko.length+' e-mail(s) non envoyé(s).'}</b> ${esc(ko[0].reason)} Copiez le message (identifiant, mot de passe, lien) et transmettez-le vous-même (e-mail, WhatsApp, SMS).</div>`:`<div class="note">E-mail${R.length>1?'s':''} envoyé${R.length>1?'s':''}. Le lien reste copiable ci-dessous.</div>`}
+   ${R.map((x,i)=>`<div><b>${esc(x.email)}</b> ${x.sent?'<span class="chip" style="background:var(--ok-bg);color:var(--ok)">envoyé</span>':'<span class="chip w">à transmettre</span>'}<div class="lnk"><input class="inp" readonly value="${esc(x.link)}" onfocus="this.select()" aria-label="Lien pour ${esc(x.email)}"><button class="btn sm" onclick="copyTxt(INVR[${i}].link)">Copier le lien</button><button class="btn sm" onclick="copyTxt(INVR[${i}].text)">Copier le message</button></div><div style="font-size:12.5px;margin:-4px 0 12px">${x.password?`Identifiant : <b>${esc(x.email)}</b> · Mot de passe : <b style="font-family:ui-monospace,Menlo,monospace">${esc(x.password)}</b>`:'<span style="color:var(--ink3)">Compte Client déjà existant : mot de passe inchangé (utilisez « Nouveaux accès » pour le régénérer).</span>'}</div></div>`).join('')}`,
   `<button class="btn p" onclick="closeOv(this)">Terminé</button>`,1);INVR=R;
 }
 let INVR=[];
@@ -820,11 +822,20 @@ let NOTR=null;
 
 /* ============ Formulaire public (lien d'invitation) ============ */
 let FT='',FPH='';
-const pubBox=h=>{$('#login').hidden=true;$('#app').hidden=true;const b=$('#pub');b.hidden=false;b.innerHTML=`<div class="login"><div class="brand" style="padding:0 0 6px"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Demande d'accréditation</span></div></div>${h}</div>`};
+const pubBox=h=>{$('#login').hidden=true;$('#app').hidden=true;const b=$('#pub');b.hidden=false;b.innerHTML=`<div class="login"><div class="brand" style="padding:0 0 6px"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Demande d'accréditation</span></div></div>${h}
+  ${!FT&&CL?`<div style="border-top:1px solid var(--line);padding-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--ink3)"><span style="flex:1;min-width:140px">Connecté : ${esc(CL.email)}</span><button class="btn sm" type="button" onclick="pwForm()">Changer mon mot de passe</button><button class="btn sm" type="button" onclick="logout()">Déconnexion</button></div>`:''}</div>`};
+function pwForm(){pubBox(`<h2>Changer mon mot de passe</h2><form onsubmit="pwSave(event)" style="display:flex;flex-direction:column;gap:12px">
+  <div class="fld"><label for="pw-o">Mot de passe actuel</label><input class="inp" id="pw-o" type="password" required autocomplete="current-password"></div>
+  <div class="fld"><label for="pw-n">Nouveau mot de passe (8 caractères minimum)</label><input class="inp" id="pw-n" type="password" required minlength="8" autocomplete="new-password"></div>
+  <p id="p-err" role="alert" style="margin:0;min-height:18px;color:var(--bad);font-size:12.5px;font-weight:500"></p>
+  <div class="tb"><button class="btn" type="button" onclick="showForm('')">Retour à mon dossier</button><button class="btn p" id="p-btn" type="submit">Enregistrer</button></div></form>`)}
+async function pwSave(ev){ev.preventDefault();const b=$('#p-btn');b.disabled=true;let r;try{r=await api('/api/me',{oldPassword:$('#pw-o').value,newPassword:$('#pw-n').value})}catch(x){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
+  b.disabled=false;if(!r.ok){$('#p-err').textContent=r.j.error||'Modification impossible.';return}
+  pubBox('<h2>Mot de passe modifié</h2><p style="margin:0;color:var(--ink2)">Utilisez ce nouveau mot de passe à votre prochaine connexion.</p><button class="btn p" type="button" style="justify-content:center" onclick="showForm(\'\')">Retour à mon dossier</button>')}
 async function showForm(token){
   FT=token;FPH='';pubBox('<p style="margin:0;color:var(--ink2)">Chargement…</p>');
-  let r;try{r=await api('/api/form?t='+encodeURIComponent(token))}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
-  if(!r.ok){pubBox(`<h2>Lien non valide</h2><p style="margin:0;color:var(--ink2)">${esc(r.j.error||'Ce lien ne fonctionne pas.')} Demandez un nouveau lien à votre organisation.</p>`);return}
+  let r;try{r=await api(token?'/api/form?t='+encodeURIComponent(token):'/api/me')}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
+  if(!r.ok){pubBox(`<h2>${token?'Lien non valide':'Dossier indisponible'}</h2><p style="margin:0;color:var(--ink2)">${esc(r.j.error||'Ce lien ne fonctionne pas.')}${token?' Demandez un nouveau lien à votre organisation.':''}</p>`);return}
   const d=r.j,p=d.person||{ln:'',fn:'',addr:'',tel:'',fct:'',photo:''};
   const head=`<h2>${esc(d.event)}</h2><p style="margin:0;color:var(--ink2)">${esc(d.category)} · ${esc(d.org)}<br><span style="font-size:12px;color:var(--ink3)">${esc(d.email)}</span></p>`;
   if(!d.editable){pubBox(head+`<div class="note" style="margin:6px 0 0">Votre dossier a bien été reçu et est en cours de traitement (${esc(ST[d.status]||d.status)}). Il ne peut plus être modifié en ligne.</div>`);return}
@@ -844,9 +855,9 @@ let FHAS=false;
 function formPh(inp){const f=inp.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=348;c.height=438;const k=Math.max(348/im.width,438/im.height),w=im.width*k,h=im.height*k;c.getContext('2d').drawImage(im,(348-w)/2,(438-h)/2,w,h);FPH=c.toDataURL('image/jpeg',.82);const pv=$('#p-prev');pv.src=FPH;pv.hidden=false;const z=$('#p-ph0');if(z)z.remove()};im.onerror=()=>{$('#p-err').textContent='Image illisible : choisissez un fichier JPG ou PNG.'};im.src=rd.result};rd.readAsDataURL(f)}
 async function sendForm(ev){ev.preventDefault();const e=$('#p-err'),b=$('#p-btn');e.textContent='';
   if(!FPH&&!FHAS){e.textContent='Ajoutez votre photo d\'identité.';return}
-  b.disabled=true;let r;try{r=await api('/api/form',{t:FT,ln:$('#p-ln').value,fn:$('#p-fn').value,addr:$('#p-addr').value,tel:$('#p-tel').value,fct:$('#p-fct').value,photo:FPH})}catch(x){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
+  b.disabled=true;let r;try{r=await api(FT?'/api/form':'/api/me',{t:FT,ln:$('#p-ln').value,fn:$('#p-fn').value,addr:$('#p-addr').value,tel:$('#p-tel').value,fct:$('#p-fct').value,photo:FPH})}catch(x){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
   b.disabled=false;if(!r.ok){e.textContent=r.j.error||'Envoi impossible.';return}
-  pubBox('<h2>Demande transmise</h2><p style="margin:0;color:var(--ink2)">Merci. Votre dossier a bien été reçu par le service accréditation. Vous serez contacté(e) si un élément manque. Vous pouvez fermer cette page.</p>');
+  pubBox('<h2>Demande transmise</h2><p style="margin:0;color:var(--ink2)">Merci. Votre dossier a bien été reçu par le service accréditation. Vous serez contacté(e) si un élément manque. Vous pouvez fermer cette page.</p>'+(FT?'':'<button class="btn" type="button" style="justify-content:center" onclick="showForm(\'\')">Revoir mon dossier</button>'));
 }
 
 /* ============ Démarrage ============ */
