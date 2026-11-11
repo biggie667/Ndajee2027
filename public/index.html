@@ -823,7 +823,7 @@ let NOTR=null;
 /* ============ Formulaire public (lien d'invitation) ============ */
 let FT='',FPH='';
 const pubBox=h=>{$('#login').hidden=true;$('#app').hidden=true;const b=$('#pub');b.hidden=false;b.innerHTML=`<div class="login"><div class="brand" style="padding:0 0 6px"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Demande d'accréditation</span></div></div>${h}
-  ${!FT&&CL?`<div style="border-top:1px solid var(--line);padding-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--ink3)"><span style="flex:1;min-width:140px">Connecté : ${esc(CL.email)}</span><button class="btn sm" type="button" onclick="pwForm()">Changer mon mot de passe</button><button class="btn sm" type="button" onclick="logout()">Déconnexion</button></div>`:''}</div>`};
+  ${!FT&&CL?`<div style="border-top:1px solid var(--line);padding-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--ink3)"><span style="flex:1 1 100%;overflow-wrap:anywhere">Connecté : ${esc(CL.email)}</span><button class="btn sm" type="button" onclick="pwForm()">Changer mon mot de passe</button><button class="btn sm" type="button" onclick="logout()">Déconnexion</button></div>`:''}</div>`};
 function pwForm(){pubBox(`<h2>Changer mon mot de passe</h2><form onsubmit="pwSave(event)" style="display:flex;flex-direction:column;gap:12px">
   <div class="fld"><label for="pw-o">Mot de passe actuel</label><input class="inp" id="pw-o" type="password" required autocomplete="current-password"></div>
   <div class="fld"><label for="pw-n">Nouveau mot de passe (8 caractères minimum)</label><input class="inp" id="pw-n" type="password" required minlength="8" autocomplete="new-password"></div>
