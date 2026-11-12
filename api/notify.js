@@ -12,7 +12,7 @@ module.exports = handler('POST', async (req, res) => {
     if (!user.perms.includes('review')) throw err(403, `Votre rôle (${user.role}) ne permet pas de notifier un dossier.`);
     const p = (await c.query(PERSON_SQL + ' WHERE p.id=$1', [String(b.pid || '')])).rows[0];
     if (!p) throw err(404, 'Dossier introuvable.');
-    const event = (await c.query("SELECT value->>'ev' ev FROM settings WHERE key='template'")).rows[0].ev;
+    const event = (await c.query("SELECT coalesce((SELECT label FROM events WHERE id=$1), (SELECT value->>'ev' FROM settings WHERE key='template')) ev", [p.ev || null])).rows[0].ev;
     const points = issuesOf(p).map(i => '- ' + i[0]);
     if (p.note) points.push('- Commentaire du service accréditation : ' + p.note);
     if (!points.length) throw err(400, 'Ce dossier ne présente aucune anomalie à signaler.');
@@ -22,7 +22,7 @@ module.exports = handler('POST', async (req, res) => {
       if (!p.email) throw err(400, "Aucune adresse e-mail n'est enregistrée pour cette personne. Ajoutez-la au dossier ou notifiez le représentant d'organisation.");
       to = [p.email];
       const t = newToken(), inv = await c.query('UPDATE invitations SET token_hash=$2, last_sent_at=now() WHERE person_id=$1 RETURNING id', [p.id, t.hash]);
-      if (!inv.rowCount) await c.query('INSERT INTO invitations (token_hash,email,category_code,organisation,person_id,created_by,last_sent_at) VALUES ($1,$2,$3,$4,$5,$6,now())', [t.hash, p.email, p.cat, p.org, p.id, user.name]);
+      if (!inv.rowCount) await c.query('INSERT INTO invitations (token_hash,email,category_code,organisation,person_id,created_by,last_sent_at,event_id,grp) VALUES ($1,$2,$3,$4,$5,$6,now(),$7,$8)', [t.hash, p.email, p.cat, p.org, p.id, user.name, p.ev || null, p.grp || '']);
       const editable = ['DRAFT', 'SUB', 'RET'].includes(p.st);
       text = `Bonjour ${p.fn},\n\nVotre dossier d'accréditation ${event} (n° ${p.id}) est incomplet. Points à régulariser :\n${points.join('\n')}\n\n` +
         (editable ? `Vous pouvez mettre à jour vos informations et votre photo en vous connectant à votre compte sur ${base}/ ou avec ce lien personnel :\n${linkFor(base, t.token)}\n\nPour une pièce d'identité ou tout autre élément, répondez à ce message ou contactez votre organisation.` : `Merci de contacter votre organisation ou le service accréditation pour régulariser.`) +

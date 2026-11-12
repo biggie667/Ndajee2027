@@ -26,7 +26,7 @@ module.exports = handler('POST', async (req, res) => {
     const out = [];
     if (b.resend) {
       const t = newToken();
-      const r = await c.query('UPDATE invitations i SET token_hash=$2, last_sent_at=now() FROM categories k WHERE i.id=$1 AND k.code=i.category_code RETURNING i.email, i.organisation org, k.label', [Number(b.resend) || 0, t.hash]);
+      const r = await c.query('UPDATE invitations i SET token_hash=$2, last_sent_at=now() FROM categories k WHERE i.id=$1 AND k.code=i.category_code RETURNING i.email, i.organisation org, k.label, (SELECT label FROM events e WHERE e.id=i.event_id) event', [Number(b.resend) || 0, t.hash]);
       if (!r.rows[0]) throw err(404, 'Invitation introuvable.');
       const i = r.rows[0];
       out.push({ ...i, link: linkFor(base, t.token), password: await clientAccount(c, i.email.toLowerCase(), i.org, true) });
@@ -38,18 +38,20 @@ module.exports = handler('POST', async (req, res) => {
       if (bad) throw err(400, `Adresse e-mail invalide : ${bad}`);
       const cat = (await c.query('SELECT code, label FROM categories WHERE code=$1', [str(b.cat, 8)])).rows[0];
       if (!cat || !org) throw err(400, 'Catégorie et organisation sont obligatoires.');
+      const ev = b.ev ? (await c.query('SELECT id, label FROM events WHERE id=$1', [str(b.ev, 16)])).rows[0] : null, grp = ev ? str(b.grp, 80) : '';
+      if (b.ev && !ev) throw err(400, 'Événement introuvable.');
       for (const email of emails) {
         const t = newToken(), password = await clientAccount(c, email, org, false);
-        await c.query('INSERT INTO invitations (token_hash,email,category_code,organisation,created_by,last_sent_at) VALUES ($1,$2,$3,$4,$5,now())', [t.hash, email, cat.code, org, user.name]);
-        out.push({ email, org, label: cat.label, link: linkFor(base, t.token), password });
+        await c.query('INSERT INTO invitations (token_hash,email,category_code,organisation,created_by,last_sent_at,event_id,grp) VALUES ($1,$2,$3,$4,$5,now(),$6,$7)', [t.hash, email, cat.code, org, user.name, ev ? ev.id : null, grp]);
+        out.push({ email, org, label: cat.label, event: ev ? ev.label : null, link: linkFor(base, t.token), password });
       }
-      await c.query('INSERT INTO audit_log (user_name,domain,detail) VALUES ($1,$2,$3)', [user.name, 'Invitations', `${emails.length} invitation(s) et compte(s) Client créés — ${cat.label}, ${org}`]);
+      await c.query('INSERT INTO audit_log (user_name,domain,detail) VALUES ($1,$2,$3)', [user.name, 'Invitations', `${emails.length} invitation(s) et compte(s) Client créés — ${cat.label}, ${org}${ev ? ', ' + ev.label : ''}`]);
     }
     return { out, event };
   });
   const results = [];
   for (const i of made.out) {
-    const m = inviteMail({ base, link: i.link, event: made.event, label: i.label, org: i.org, email: i.email, password: i.password }), r = await sendMail({ to: i.email, ...m });
+    const m = inviteMail({ base, link: i.link, event: i.event || made.event, label: i.label, org: i.org, email: i.email, password: i.password }), r = await sendMail({ to: i.email, ...m });
     results.push({ email: i.email, link: i.link, password: i.password, sent: r.sent, reason: r.reason || '', subject: m.subject, text: m.text });
   }
   res.status(200).json({ ok: true, results });

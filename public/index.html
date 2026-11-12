@@ -222,7 +222,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   <aside class="side">
     <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-f">DG Groupe · v17<br>Données de démonstration</div>
+    <div class="side-f">DG Groupe · v18<br>Données de démonstration</div>
   </aside>
   <div class="wrap">
     <header class="top" id="top"></header>
@@ -240,7 +240,7 @@ const ST_COL={DRAFT:'#B8C3D6',SUB:'#2563EB',RET:'#E0A100',APP:'#0F9D6C',REJ:'#D0
 const RQ={PEND:'En attente',OK:'Accordé',NO:'Refusé'};
 const PERMS=[['view','Consulter les dossiers'],['edit','Créer / modifier'],['review','Valider / refuser'],['access','Décider des ajouts d\'accès'],['matrix','Modifier la matrice'],['print','Imprimer / remettre'],['export','Exporter les rapports'],['admin','Gérer utilisateurs & rôles']];
 const NAV=[
- ['Pilotage',[['dash','Tableau de bord','grid']]],
+ ['Pilotage',[['dash','Tableau de bord','grid'],['events','Événements','cal']]],
  ['Accréditation',[['dem','Demandes','file'],['inv','Invitations','mail'],['revue','Revue des données','check'],['verif','Vérifications','shield']]],
  ['Populations',[['ath','Athlètes & équipes','medal'],['fi','Fédérations internationales','globe'],['fn','Fédérations nationales','flag'],['staff','Staff','brief'],['media','Médias','mic'],['vol','Volontaires','heart']]],
  ['Accès & privilèges',[['matrix','Matrice d\'accès','table'],['acces','Ajouts d\'accès','plus']]],
@@ -267,7 +267,8 @@ const IC={
  chart:'<path d="M4 20V4M4 20h16M8 16v-5M12 16V8M16 16v-3"/>',
  users:'<circle cx="9" cy="8" r="3.500"/><path d="M2.500 20a6.500 6.500 0 0 1 13 0M16 4.500a3.500 3.500 0 0 1 0 7M18 14.500a6 6 0 0 1 3.500 5.500"/>',
  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
- mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>'
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>'
 };
 const ico=k=>`<svg viewBox="0 0 24 24">${IC[k]||''}</svg>`;
 const FORK='<svg viewBox="0 0 16 20"><path d="M3 1v5.500a2 2 0 0 0 1.500 1.900V19h1.500V8.400A2 2 0 0 0 7.500 6.500V1H6.300v5H5.600V1H4.400v5H3.700V1zM12.500 1c-1.700 0-2.500 2.200-2.500 4.500 0 2 .700 3.400 1.600 3.800V19h1.500V1z" fill="#000"/></svg>';
@@ -282,11 +283,11 @@ const opt=(list,val,first)=>(first!=null?`<option value="">${first}</option>`:''
 function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ============ État ============ */
-let S,VIEW='dash',F={q:'',cat:'',st:'',org:'',page:1},SEL=new Set(),UI={rule:'',rep:'cat',rq:'PEND',tplP:'',pt:'APP',aq:''};
+let S,VIEW='dash',F={q:'',cat:'',st:'',org:'',grp:'',page:1},SEL=new Set(),UI={rule:'',rep:'cat',rq:'PEND',tplP:'',pt:'APP',aq:'',ev:''};
 /* ---- Synchronisation avec le serveur ---- */
 let LAST=null,SYNC=Promise.resolve(),TMR=0,LOADED=0;
 const snapOf=()=>({p:new Map(S.persons.map(p=>[p.id,JSON.stringify(p)])),r:new Map(S.reqs.map(q=>[q.id,JSON.stringify(q)])),u:new Map(S.users.map(u=>[u.id,JSON.stringify(u)])),
-  roles:JSON.stringify(S.roles),cats:JSON.stringify(S.cats),zones:JSON.stringify(S.zones),privs:JSON.stringify(S.privs),matrix:JSON.stringify(S.matrix),tpl:JSON.stringify(S.tpl)});
+  roles:JSON.stringify(S.roles),cats:JSON.stringify(S.cats),zones:JSON.stringify(S.zones),privs:JSON.stringify(S.privs),matrix:JSON.stringify(S.matrix),tpl:JSON.stringify(S.tpl),events:JSON.stringify(S.events)});
 async function api(path,body){const r=await fetch(path,body===undefined?{credentials:'same-origin'}:{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   let j={};try{j=await r.json()}catch(e){}return{ok:r.ok,status:r.status,j}}
 function save(){clearTimeout(TMR);TMR=setTimeout(flush,250)}
@@ -296,7 +297,7 @@ function flush(){TMR=0;SYNC=SYNC.then(async()=>{
   if(pu.length||pd.length)b.persons={up:pu,del:pd};
   const ru=S.reqs.filter(q=>LAST.r.get(q.id)!==n.r.get(q.id));if(ru.length)b.reqs={up:ru};
   const uu=S.users.filter(u=>LAST.u.get(u.id)!==n.u.get(u.id));if(uu.length)b.users={up:uu};
-  ['roles','cats','zones','privs','matrix','tpl'].forEach(k=>{if(LAST[k]!==n[k])b[k]=S[k]});
+  ['roles','cats','zones','privs','matrix','tpl','events'].forEach(k=>{if(LAST[k]!==n[k])b[k]=S[k]});
   if(au.length)b.audit=au;
   if(!Object.keys(b).length)return;
   let r;try{r=await api('/api/sync',b)}catch(e){r={ok:false,status:0,j:{error:'Connexion au serveur impossible.'}}}
@@ -306,7 +307,7 @@ function flush(){TMR=0;SYNC=SYNC.then(async()=>{
 }).catch(e=>console.error(e))}
 async function reload(){const r=await api('/api/state');if(r.status===401){showLogin();return false}if(!r.ok){showLogin(r.j.error||'Serveur indisponible.');return false}
   if(r.j.client){CL=r.j;S=null;LAST=null;await showForm('');return true}
-  CL=null;$('#pub').hidden=true;  S=r.j;LAST=snapOf();LOADED=Date.now();$('#login').hidden=true;$('#app').hidden=false;render();return true}
+  CL=null;$('#pub').hidden=true;  S=r.j;S.events=S.events||[];LAST=snapOf();LOADED=Date.now();$('#login').hidden=true;$('#app').hidden=false;render();return true}
 let CL=null;
 function showLogin(msg){S=null;LAST=null;CL=null;closeAll();$('#pub').hidden=true;$('#app').hidden=true;$('#login').hidden=false;$('#l-err').textContent=msg||'';$('#l-pw').value=''}
 async function doLogin(ev){ev.preventDefault();const b=$('#l-btn');b.disabled=true;$('#l-err').textContent='';
@@ -317,6 +318,14 @@ async function logout(){await SYNC;try{await api('/api/logout',{})}catch(e){}sho
 const me=()=>S.users.find(u=>u.id===S.me)||S.users[0];
 const can=k=>(S.roles[me().role]||[]).includes(k);
 const P=id=>S.persons.find(p=>p.id===id);
+/* ---- Événements : classement des dossiers (sportif, concert, dîner de gala, diplomatique…) ---- */
+const EVT=['Sportif','Concert','Dîner de gala','Diplomatique','Conférence','Cérémonie','Autre'];
+const EVG={'Sportif':'Sport / discipline','Concert':'Espace','Dîner de gala':'Table','Diplomatique':'Délégation','Conférence':'Session','Cérémonie':'Protocole'};
+const EV=id=>S.events.find(e=>e.id===id);
+const PS=()=>!UI.ev?S.persons:S.persons.filter(p=>UI.ev==='-'?!p.ev:p.ev===UI.ev);
+const evTxt=p=>{const e=EV(p.ev);return e?e.l+(p.grp?' · '+p.grp:''):''};
+const evGroups=e=>e?[...new Set([...e.gs,...S.persons.filter(p=>p.ev===e.id&&p.grp).map(p=>p.grp)])]:[];
+const newId=()=>Math.max(210000,...S.persons.map(x=>parseInt(x.id)||0));
 const cat=c=>S.cats.find(x=>x.c===c)||{c,l:c,b:c,col:'#555',pop:''};
 const nm=p=>p?`${p.fn} ${p.ln.toUpperCase()}`:'—';
 function log(a,d,pid){S.audit.unshift({t:Date.now(),u:me().n,a,d,pid:pid||'',_n:1});if(S.audit.length>600)S.audit.length=600;save()}
@@ -353,16 +362,17 @@ function dlExp(){try{const b=new Blob(['﻿'+EXP.text],{type:'text/plain;charset
 function copyExp(){const t=$('#exp-t');navigator.clipboard.writeText(EXP.text).then(()=>toast('Contenu copié'),()=>{t.select();toast('Sélectionné : faites Ctrl+C')})}
 /* ============ Shell ============ */
 const V={};
-function go(v,keep){VIEW=v;if(!keep)F={q:'',cat:'',st:'',org:'',page:1};SEL.clear();$('#app').classList.remove('nav-open');render();$('#main').scrollTop=0;try{history.replaceState(null,'','#'+v)}catch(e){}}
-function count(v){const n=S.persons;switch(v){
+function go(v,keep){VIEW=v;if(!keep)F={q:'',cat:'',st:'',org:'',grp:'',page:1};SEL.clear();$('#app').classList.remove('nav-open');render();$('#main').scrollTop=0;try{history.replaceState(null,'','#'+v)}catch(e){}}
+function count(v){const n=PS();switch(v){
   case'revue':return n.filter(p=>p.st==='SUB').length;case'verif':return n.filter(p=>p.bg!=='OK'&&p.st!=='REJ').length;
   case'acces':return S.reqs.filter(q=>q.st==='PEND').length;case'print':return n.filter(p=>p.st==='APP').length}return null}
 function render(){
-  DUP=null;
+  DUP=null;if(UI.ev&&UI.ev!=='-'&&!EV(UI.ev))UI.ev='';
   const ae=document.activeElement,fid=ae&&ae.id,pos=ae&&ae.selectionStart;
   $('#nav').innerHTML=NAV.map(g=>`<div class="nav-g">${g[0]}</div>`+g[1].map(i=>{const c=count(i[0]);return `<button class="nav-i${VIEW===i[0]?' on':''}" onclick="go('${i[0]}')">${ico(i[2])}<span>${i[1]}</span>${c?`<span class="ct hot num">${c}</span>`:''}</button>`}).join('')).join('');
   const u=me();
   $('#top').innerHTML=`<button class="btn menu-b" onclick="$('#app').classList.toggle('nav-open')">Menu</button><div><h1>${TITLES[VIEW]}</h1></div><span class="sp"></span>
+   ${S.events.length?`<select class="inp" aria-label="Événement affiché" title="Limiter l'affichage à un événement" onchange="UI.ev=this.value;F.grp='';F.page=1;SEL.clear();render()" style="max-width:230px">${opt([...S.events.filter(e=>!e.arch||e.id===UI.ev).map(e=>[e.id,e.l]),['-','Sans événement']],UI.ev,'Tous les événements')}</select>`:''}
    <div class="sess"><span><b>${esc(u.n)}</b> · ${esc(u.role)}</span><button class="btn sm" onclick="logout()">Déconnexion</button></div>`;
   $('#main').innerHTML=can('view')?V[VIEW]():'<div class="card empty">Votre rôle ne permet pas de consulter cette page.</div>';
   if(fid){const e=document.getElementById(fid);if(e){e.focus();try{e.setSelectionRange(pos,pos)}catch(x){}}}
@@ -370,7 +380,7 @@ function render(){
 
 /* ============ Tableau de bord ============ */
 V.dash=()=>{
-  const n=S.persons,by=k=>n.filter(p=>p.st===k).length,tot=n.length;
+  const n=PS(),by=k=>n.filter(p=>p.st===k).length,tot=n.length,cur=EV(UI.ev);
   const anom=n.filter(p=>!['REJ'].includes(p.st)&&blocking(p).length).length;
   const k=(l,v,s,to)=>`<button class="kpi" onclick="${to}"><small>${l}</small><b class="num">${v}</b><em>${s}</em></button>`;
   const ord=['DRAFT','SUB','RET','APP','PRT','DLV','REJ'];
@@ -384,7 +394,7 @@ V.dash=()=>{
    ${k('Anomalies bloquantes',anom,'dossiers concernés',"go('revue')")}
   </div>
   <div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Avancement des dossiers</h3></div><div class="card-b">
-   <div class="flow">${ord.map(s=>`<i style="width:${by(s)/tot*100}%;background:${ST_COL[s]}" title="${ST[s]} : ${by(s)}"></i>`).join('')}</div>
+   <div class="flow">${ord.map(s=>`<i style="width:${by(s)/(tot||1)*100}%;background:${ST_COL[s]}" title="${ST[s]} : ${by(s)}"></i>`).join('')}</div>
    <div class="lg">${ord.map(s=>`<span><i style="background:${ST_COL[s]}"></i>${ST[s]} <b class="num">${by(s)}</b></span>`).join('')}</div></div></div>
   <div class="grid g2">
    <div class="card"><div class="card-h"><h3>Par catégorie</h3></div><div class="card-b">${S.cats.map(c=>{const a=n.filter(p=>p.cat===c.c),ok=a.filter(p=>['APP','PRT','DLV'].includes(p.st)).length;
@@ -392,18 +402,55 @@ V.dash=()=>{
      <p style="margin:10px 0 0;font-size:12px;color:var(--ink3)">Part des dossiers approuvés, imprimés ou remis.</p></div></div>
    <div class="card"><div class="card-h"><h3>À traiter en priorité</h3><span class="sp"></span><button class="btn sm" onclick="go('revue')">Ouvrir la revue</button></div>
     <div class="tw"><table class="t"><tbody>${todo.map(p=>`<tr class="row" onclick="openP('${p.id}')"><td><b>${esc(nm(p))}</b><small>${esc(cat(p.cat).l)} · ${esc(p.org)}</small></td><td>${issChips(p)}</td></tr>`).join('')||'<tr><td class="empty">Aucun dossier en attente.</td></tr>'}</tbody></table></div></div>
+   ${S.events.length?(cur?(()=>{const g={};n.forEach(p=>{const k=p.grp||'(non précisé)';g[k]=(g[k]||0)+1});const L=Object.entries(g).sort((a,b)=>b[1]-a[1]),mx=Math.max(1,...L.map(x=>x[1]));
+     return `<div class="card" style="grid-column:1/-1"><div class="card-h"><div><h3>${esc(cur.l)} — par ${esc(cur.gl.toLowerCase())}</h3><span style="font-size:12px;color:var(--ink3)">${esc(cur.type)}${cur.date?' · '+fmtD(cur.date):''}${cur.place?' · '+esc(cur.place):''}</span></div><span class="sp"></span><button class="btn sm" onclick="go('events')">Tous les événements</button></div><div class="card-b">${L.map(x=>`<div class="bar-row"><span>${esc(x[0])}</span><div class="bar-t"><i style="width:${x[1]/mx*100}%"></i></div><b class="num r">${x[1]}</b></div>`).join('')||'<span style="color:var(--ink3)">Aucun dossier classé dans cet événement.</span>'}</div></div>`})()
+    :`<div class="card" style="grid-column:1/-1"><div class="card-h"><h3>Par événement</h3><span class="sp"></span><button class="btn sm" onclick="go('events')">Gérer les événements</button></div><div class="card-b">${[...S.events.filter(e=>!e.arch),{id:'-',l:'Sans événement'}].map(e=>{const a=n.filter(p=>e.id==='-'?!p.ev:p.ev===e.id),ok=a.filter(p=>['APP','PRT','DLV'].includes(p.st)).length;
+      return `<div class="bar-row" style="cursor:pointer" onclick="UI.ev='${e.id}';render()" title="Afficher uniquement cet événement"><span>${esc(e.l)}${e.type?` <span class="chip x">${esc(e.type)}</span>`:''}</span><div class="bar-t" title="${ok} approuvés sur ${a.length}"><i style="width:${a.length?ok/a.length*100:0}%"></i></div><b class="num r">${ok}/${a.length}</b></div>`}).join('')}</div></div>`):''}
    <div class="card" style="grid-column:1/-1"><div class="card-h"><h3>Activité récente</h3><span class="sp"></span><button class="btn sm" onclick="go('audit')">Journal complet</button></div>
     <div class="tw"><table class="t"><tbody>${S.audit.slice(0,7).map(a=>`<tr><td class="num" style="white-space:nowrap;color:var(--ink3)">${fmtT(a.t)}</td><td>${esc(a.u)}</td><td><span class="chip x">${esc(a.a)}</span></td><td>${esc(a.d)}</td></tr>`).join('')}</tbody></table></div></div>
   </div>`;
 };
 
+/* ============ Événements ============ */
+V.events=()=>{
+  const ed=can('matrix'),none=S.persons.filter(p=>!p.ev).length,ord=['DRAFT','SUB','RET','APP','PRT','DLV','REJ'];
+  return `<div class="note">Un événement regroupe des dossiers : compétition sportive, concert, dîner de gala, rencontre diplomatique… Chaque événement a son propre <b>sous-classement</b> (sports, tables, délégations, espaces…), librement modifiable. Le sélecteur en haut de l'écran limite ensuite tout l'affichage (tableau de bord, demandes, revue, impression, rapports) à l'événement choisi.</div>
+  <div class="kpis">${[['Événements',S.events.filter(e=>!e.arch).length],['Dossiers classés',S.persons.length-none],['Sans événement',none]].map(x=>`<div class="kpi" style="cursor:default"><small>${x[0]}</small><b class="num">${x[1]}</b></div>`).join('')}</div>
+  <div class="card" style="margin-bottom:16px"><div class="card-h"><h3>Événements</h3><span class="sp"></span>${none?`<button class="btn" onclick="UI.ev='-';go('dem')">Voir les ${none} dossiers sans événement</button>`:''}${ed?`<button class="btn p" onclick="evEdit('')">Nouvel événement</button>`:''}</div>
+  ${S.events.length?'':`<div class="card-b empty">Aucun événement pour le moment.${ed?' Créez le premier avec « Nouvel événement ».':''}</div>`}</div>
+  <div class="grid g2">${S.events.map(e=>{const a=S.persons.filter(p=>p.ev===e.id),g={};a.forEach(p=>{const k=p.grp||'(non précisé)';g[k]=(g[k]||0)+1});e.gs.forEach(x=>{g[x]=g[x]||0});
+    const L=Object.entries(g).sort((x,y)=>y[1]-x[1]),mx=Math.max(1,...L.map(x=>x[1]));
+    return `<div class="card"${e.arch?' style="opacity:.65"':''}><div class="card-h"><div style="min-width:0"><h3>${esc(e.l)}</h3><span style="font-size:12px;color:var(--ink3)"><span class="chip x">${esc(e.type)}</span>${e.date?fmtD(e.date):'Date à définir'}${e.place?' · '+esc(e.place):''}${e.arch?' · archivé':''}</span></div><span class="sp"></span><b class="num" style="font-size:20px">${a.length}</b></div>
+    <div class="card-b">${a.length?`<div class="flow">${ord.map(s=>{const c=a.filter(p=>p.st===s).length;return `<i style="width:${c/a.length*100}%;background:${ST_COL[s]}" title="${ST[s]} : ${c}"></i>`}).join('')}</div>`:''}
+     <div class="sec" style="margin-top:${a.length?12:0}px">${esc(e.gl)}</div>${L.slice(0,12).map(x=>`<div class="bar-row"><span>${esc(x[0])}</span><div class="bar-t"><i style="width:${x[1]/mx*100}%"></i></div><b class="num r">${x[1]}</b></div>`).join('')||'<span style="color:var(--ink3);font-size:12.5px">Aucun sous-classement défini.</span>'}${L.length>12?`<p style="margin:6px 0 0;font-size:12px;color:var(--ink3)">+ ${L.length-12} autre(s)</p>`:''}
+     <div class="tb" style="margin-top:14px"><button class="btn sm p" onclick="UI.ev='${e.id}';go('dem')">Voir les dossiers</button><button class="btn sm" onclick="UI.ev='${e.id}';go('dash')">Tableau de bord</button>${ed?`<button class="btn sm" onclick="evEdit('${e.id}')">Modifier</button>`:''}</div></div></div>`}).join('')}</div>`;
+};
+function evEdit(id){const e=EV(id)||{l:'',type:'Sportif',date:'',place:'',gl:EVG['Sportif'],gs:[],arch:0};
+  modal(id?'Modifier l\'événement':'Nouvel événement',`<div class="form">
+   <div class="fld full"><label for="v-l">Nom de l'événement</label><input class="inp" id="v-l" maxlength="120" value="${esc(e.l)}" placeholder="Ex. Dîner de gala du 12 décembre"></div>
+   <div class="fld"><label for="v-t">Type (choisir ou saisir un nouveau type)</label><input class="inp" id="v-t" list="v-ts" maxlength="60" value="${esc(e.type)}" oninput="const g=$('#v-gl');if(!g.dataset.own)g.value=EVG[this.value]||'Groupe'"><datalist id="v-ts">${[...new Set([...EVT,...S.events.map(x=>x.type)])].map(t=>`<option value="${esc(t)}">`).join('')}</datalist></div>
+   <div class="fld"><label for="v-d">Date</label><input class="inp" id="v-d" type="date" value="${e.date}"></div>
+   <div class="fld full"><label for="v-p">Lieu</label><input class="inp" id="v-p" maxlength="120" value="${esc(e.place)}"></div>
+   <div class="fld full"><label for="v-gl">Nom du sous-classement (sport, table, délégation, espace…)</label><input class="inp" id="v-gl" maxlength="40" value="${esc(e.gl)}" ${id?'data-own="1"':''} oninput="this.dataset.own=1"></div>
+   <div class="fld full"><label for="v-gs">Valeurs proposées (une par ligne) — une saisie libre reste possible sur chaque dossier</label><textarea class="inp" id="v-gs" style="min-height:120px" placeholder="Athlétisme\nNatation\nBasketball 3x3">${esc(e.gs.join('\n'))}</textarea></div>
+   ${id?`<div class="fld full"><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="v-a" ${e.arch?'checked':''}> Archiver (masqué des listes de choix, dossiers conservés)</label></div>`:''}</div>`,
+  `${id?`<button class="btn bad" style="margin-right:auto" onclick="evDel('${id}')">Supprimer</button>`:''}<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="evSave('${id}')">Enregistrer</button>`)}
+function evSave(id){const l=$('#v-l').value.trim();if(!l){toast('Le nom de l\'événement est obligatoire');return}
+  if(S.events.some(x=>x.id!==id&&x.l.toLowerCase()===l.toLowerCase())){toast('Un événement porte déjà ce nom');return}
+  let e=EV(id);if(!e){e={id:'e'+Date.now().toString(36)};S.events.push(e)}
+  Object.assign(e,{l,type:$('#v-t').value.trim()||'Autre',date:$('#v-d').value,place:$('#v-p').value.trim(),gl:$('#v-gl').value.trim()||'Groupe',gs:[...new Set($('#v-gs').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean))],arch:$('#v-a')&&$('#v-a').checked?1:0});
+  log('Événements',(id?'Modification de « ':'Création de « ')+l+' » ('+e.type+')');closeAll();render();toast('Événement enregistré')}
+function evDel(id){const e=EV(id),n=S.persons.filter(p=>p.ev===id).length;modal('Supprimer l\'événement',`<p style="margin:0">Supprimer <b>${esc(e.l)}</b> ? ${n?`Ses <b>${n}</b> dossier(s) sont conservés mais ne seront plus classés.`:'Aucun dossier n\'y est rattaché.'} Pour le masquer sans rien perdre, utilisez plutôt « Archiver ».</p>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn bad" onclick="evDelDo('${id}')">Supprimer</button>`)}
+function evDelDo(id){const e=EV(id);S.events=S.events.filter(x=>x.id!==id);S.persons.forEach(p=>{if(p.ev===id){p.ev='';p.grp=''}});if(UI.ev===id)UI.ev='';log('Événements','Suppression de « '+e.l+' »');closeAll();render();toast('Événement supprimé')}
+
 /* ============ Registre (demandes + populations) ============ */
 let CUR=[];
 function reg(pop,intro){
   const cs=S.cats.filter(c=>!pop||c.pop===pop),codes=cs.map(c=>c.c);
-  const base=S.persons.filter(p=>codes.includes(p.cat)),orgs=[...new Set(base.map(p=>p.org))].sort();
+  const evc=EV(UI.ev),grps=evGroups(evc),base=PS().filter(p=>codes.includes(p.cat)),orgs=[...new Set(base.map(p=>p.org))].sort();
   const q=F.q.toLowerCase();
-  const rows=base.filter(p=>(!q||(p.ln+' '+p.fn+' '+p.id+' '+p.org+' '+p.fct).toLowerCase().includes(q))&&(!F.cat||p.cat===F.cat)&&(!F.st||p.st===F.st)&&(!F.org||p.org===F.org));
+  const rows=base.filter(p=>(!q||(p.ln+' '+p.fn+' '+p.id+' '+p.org+' '+p.fct).toLowerCase().includes(q))&&(!F.cat||p.cat===F.cat)&&(!F.st||p.st===F.st)&&(!F.org||p.org===F.org)&&(!F.grp||p.grp===F.grp));
   CUR=rows;const pages=Math.max(1,Math.ceil(rows.length/25));F.page=Math.min(F.page,pages);const pg=rows.slice((F.page-1)*25,F.page*25);
   const all=pg.length&&pg.every(p=>SEL.has(p.id));
   const sum=pop?`<div class="kpis">${[['Dossiers',base.length],['En revue',base.filter(p=>p.st==='SUB').length],['Approuvés',base.filter(p=>p.st==='APP').length],['Imprimés / remis',base.filter(p=>['PRT','DLV'].includes(p.st)).length],['Organisations',orgs.length]].map(x=>`<div class="kpi" style="cursor:default"><small>${x[0]}</small><b class="num">${x[1]}</b></div>`).join('')}</div>`:'';
@@ -411,22 +458,23 @@ function reg(pop,intro){
     <input class="inp" id="f-q" placeholder="Nom, n° de dossier, organisation…" value="${esc(F.q)}" oninput="F.q=this.value;F.page=1;render()" style="width:250px">
     ${cs.length>1?`<select class="inp" onchange="F.cat=this.value;F.page=1;render()">${opt(cs.map(c=>[c.c,c.l]),F.cat,'Toutes catégories')}</select>`:''}
     <select class="inp" onchange="F.st=this.value;F.page=1;render()">${opt(Object.entries(ST),F.st,'Tous statuts')}</select>
-    <select class="inp" onchange="F.org=this.value;F.page=1;render()" style="max-width:210px">${opt(orgs,F.org,'Toutes organisations')}</select></div>
+    <select class="inp" onchange="F.org=this.value;F.page=1;render()" style="max-width:210px">${opt(orgs,F.org,'Toutes organisations')}</select>
+    ${evc&&grps.length?`<select class="inp" onchange="F.grp=this.value;F.page=1;render()" style="max-width:200px">${opt(grps,F.grp,esc(evc.gl)+' : tous')}</select>`:''}</div>
     <div class="tb">${can('export')?`<button class="btn" onclick="exportCur()">Exporter (${rows.length})</button>`:''}${can('edit')?`<button class="btn" onclick="invNew('${cs[0].c}')">Inviter par lien</button><button class="btn" onclick="importCSV()">Import en masse</button><button class="btn p" onclick="editP('','${cs[0].c}')">Nouveau dossier</button>`:''}</div></div>
    ${SEL.size?`<div class="card-h" style="background:var(--sky3)"><b>${SEL.size} sélectionné(s)</b><span class="sp"></span>
-     ${can('edit')?`<button class="btn sm" onclick="bulk('SUB')">Soumettre</button>`:''}${can('review')?`<button class="btn sm" onclick="bulk('APP')">Approuver</button>`:''}${can('print')?`<button class="btn sm" onclick="printIds([...SEL])">Imprimer</button>`:''}<button class="btn sm" onclick="SEL.clear();render()">Annuler</button></div>`:''}
-   <div class="tw"><table class="t"><thead><tr><th class="c"><input type="checkbox" ${all?'checked':''} onchange="selPage(this.checked)" aria-label="Tout sélectionner"></th><th>N° dossier</th><th>Titulaire</th><th>Catégorie</th><th>Organisation</th><th>Fonction</th><th>Contrôles</th><th>Statut</th></tr></thead>
+     ${can('edit')&&S.events.length?`<button class="btn sm" onclick="classAsk()">Classer dans un événement</button>`:''}${can('edit')?`<button class="btn sm" onclick="bulk('SUB')">Soumettre</button>`:''}${can('review')?`<button class="btn sm" onclick="bulk('APP')">Approuver</button>`:''}${can('print')?`<button class="btn sm" onclick="printIds([...SEL])">Imprimer</button>`:''}<button class="btn sm" onclick="SEL.clear();render()">Annuler</button></div>`:''}
+   <div class="tw"><table class="t"><thead><tr><th class="c"><input type="checkbox" ${all?'checked':''} onchange="selPage(this.checked)" aria-label="Tout sélectionner"></th><th>N° dossier</th><th>Titulaire</th><th>Catégorie</th><th>Organisation</th>${S.events.length?'<th>Événement</th>':''}<th>Fonction</th><th>Contrôles</th><th>Statut</th></tr></thead>
    <tbody>${pg.map(p=>{const c=cat(p.cat),b=issues(p).length;return `<tr class="row" onclick="openP('${p.id}')"><td class="c" onclick="event.stopPropagation()"><input type="checkbox" ${SEL.has(p.id)?'checked':''} onchange="tgl('${p.id}')" aria-label="Sélectionner"></td>
-     <td class="num">${p.id}</td><td><b>${esc(nm(p))}</b></td><td><i class="cat-d" style="background:${c.col}"></i>${esc(c.l)}</td><td>${esc(p.org)}</td><td>${esc(p.fct)||'—'}</td>
-     <td>${b?`<span class="chip ${blocking(p).length?'b':'w'}">${b} anomalie${b>1?'s':''}</span>`:'<span style="color:var(--ok);font-weight:600">Conforme</span>'}</td><td>${pill(p.st)}</td></tr>`}).join('')||'<tr><td colspan="8" class="empty">Aucun dossier ne correspond aux filtres.</td></tr>'}</tbody></table></div>
+     <td class="num">${p.id}</td><td><b>${esc(nm(p))}</b></td><td><i class="cat-d" style="background:${c.col}"></i>${esc(c.l)}</td><td>${esc(p.org)}</td>${S.events.length?`<td>${EV(p.ev)?esc(EV(p.ev).l)+(p.grp?`<small>${esc(p.grp)}</small>`:''):'<span style="color:var(--ink3)">—</span>'}</td>`:''}<td>${esc(p.fct)||'—'}</td>
+     <td>${b?`<span class="chip ${blocking(p).length?'b':'w'}">${b} anomalie${b>1?'s':''}</span>`:'<span style="color:var(--ok);font-weight:600">Conforme</span>'}</td><td>${pill(p.st)}</td></tr>`}).join('')||'<tr><td colspan="9" class="empty">Aucun dossier ne correspond aux filtres.</td></tr>'}</tbody></table></div>
    <div class="pg"><span>${rows.length} dossier(s)</span><span style="flex:1"></span><button class="btn sm" ${F.page<=1?'disabled':''} onclick="F.page--;render()">Précédent</button><span class="num">Page ${F.page} / ${pages}</span><button class="btn sm" ${F.page>=pages?'disabled':''} onclick="F.page++;render()">Suivant</button></div></div>`;
 }
 V.dem=()=>reg(null);
 V.ath=()=>reg('ath');V.fi=()=>reg('fi');V.fn=()=>reg('fn');V.staff=()=>reg('staff');V.media=()=>reg('media');V.vol=()=>reg('vol');
 function tgl(id){SEL.has(id)?SEL.delete(id):SEL.add(id);render()}
 function selPage(on){CUR.slice((F.page-1)*25,F.page*25).forEach(p=>on?SEL.add(p.id):SEL.delete(p.id));render()}
-const HEAD=['numero','nom','prenom','sexe','date_naissance','nationalite','categorie','organisation','fonction','adresse','telephone','email','statut','verification','zones','privileges','restauration','anomalies'];
-const line=p=>{const e=eff(p);return[p.id,p.ln,p.fn,p.sx,p.dob,p.nat,cat(p.cat).l,p.org,p.fct,p.addr,p.tel,p.email,ST[p.st],p.bg,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',issues(p).map(k=>rule(k)[1]).join(' | ')]};
+const HEAD=['numero','nom','prenom','sexe','date_naissance','nationalite','categorie','organisation','fonction','adresse','telephone','email','statut','verification','zones','privileges','restauration','anomalies','evenement','type_evenement','sous_classement'];
+const line=p=>{const e=eff(p);return[p.id,p.ln,p.fn,p.sx,p.dob,p.nat,cat(p.cat).l,p.org,p.fct,p.addr,p.tel,p.email,ST[p.st],p.bg,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',issues(p).map(k=>rule(k)[1]).join(' | '),(EV(p.ev)||{l:''}).l,(EV(p.ev)||{type:''}).type,EV(p.ev)?p.grp:'']};
 function exportCur(){xlsxOut('dossiers_'+VIEW,()=>[{title:TITLES[VIEW],rows:[HEAD_FR,...CUR.map(line)]}])}
 
 /* ============ Fiche dossier ============ */
@@ -443,7 +491,7 @@ function openP(id){
   drawer(`<div class="modal-h"><div style="flex:1;min-width:0"><h3>${esc(nm(p))}</h3><span style="font-size:12px;color:var(--ink3)" class="num">Dossier ${p.id}</span></div>${pill(p.st)}<button class="xb" onclick="closeOv(this)" aria-label="Fermer">×</button></div>
   <div class="modal-b" style="flex:1">
    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start"><div style="--bs:5px">${badge(p)}</div>
-   <dl class="dl" style="flex:1;min-width:220px"><dt>Catégorie</dt><dd><i class="cat-d" style="background:${c.col}"></i>${esc(c.l)}</dd><dt>Organisation</dt><dd>${esc(p.org)}</dd><dt>Fonction</dt><dd>${esc(p.fct)||'—'}</dd>
+   <dl class="dl" style="flex:1;min-width:220px"><dt>Catégorie</dt><dd><i class="cat-d" style="background:${c.col}"></i>${esc(c.l)}</dd><dt>Organisation</dt><dd>${esc(p.org)}</dd><dt>Fonction</dt><dd>${esc(p.fct)||'—'}</dd>${S.events.length?`<dt>Événement</dt><dd>${EV(p.ev)?esc(EV(p.ev).l)+` <span class="chip x">${esc(EV(p.ev).type)}</span>`+(p.grp?`<br><span style="color:var(--ink2)">${esc(EV(p.ev).gl)} : ${esc(p.grp)}</span>`:''):'Non classé'}</dd>`:''}
     <dt>Sexe</dt><dd>${{F:'Féminin',M:'Masculin'}[p.sx]||'—'}</dd><dt>Naissance</dt><dd>${fmtD(p.dob)}${age(p.dob)!=null?` <span style="color:var(--ink3)">(${age(p.dob)} ans en 2026)</span>`:''}</dd><dt>Nationalité</dt><dd>${esc(p.nat)||'—'}</dd><dt>Adresse</dt><dd>${esc(p.addr)||'—'}</dd><dt>Téléphone</dt><dd>${esc(p.tel)||'—'}</dd><dt>E-mail</dt><dd>${esc(p.email)||'—'}</dd>
     <dt>Photo</dt><dd>${p.photo||p.hasPh?'Fournie':'Manquante'}</dd><dt>Pièce d'identité</dt><dd>${p.doc?'Fournie':'Non fournie'}</dd><dt>Vérification</dt><dd>${{OK:'Conforme',PEND:'En attente',FLAG:'Signalée'}[p.bg]}</dd></dl></div>
    ${p.note?`<div class="note w" style="margin:14px 0 0"><b>Commentaire de revue :</b> ${esc(p.note)}</div>`:''}
@@ -473,41 +521,51 @@ function bulk(st){let ok=0,ko=0;[...SEL].forEach(id=>{const p=P(id);const from=s
 /* ============ Formulaire dossier ============ */
 let PH='';
 function editP(id,defCat){
-  const p=id?P(id):{ln:'',fn:'',sx:'F',dob:'',nat:'',cat:defCat||S.cats[0].c,org:'',fct:'',doc:false,photo:'',hasPh:false};PH=p.photo||'';
+  const p=id?P(id):{ln:'',fn:'',sx:'F',dob:'',nat:'',cat:defCat||S.cats[0].c,org:'',fct:'',doc:false,photo:'',hasPh:false,ev:EV(UI.ev)?UI.ev:'',grp:F.grp||''};PH=p.photo||'';
   modal(id?'Modifier le dossier':'Nouveau dossier',`<div class="form">
    <div class="fld"><label for="e-ln">Nom</label><input class="inp" id="e-ln" value="${esc(p.ln)}"></div><div class="fld"><label for="e-fn">Prénom</label><input class="inp" id="e-fn" value="${esc(p.fn)}"></div>
    <div class="fld"><label for="e-sx">Sexe</label><select class="inp" id="e-sx">${opt([['F','Féminin'],['M','Masculin']],p.sx||'','Non renseigné')}</select></div><div class="fld"><label for="e-dob">Date de naissance</label><input class="inp" id="e-dob" type="date" value="${p.dob}"></div>
    <div class="fld"><label for="e-cat">Catégorie</label><select class="inp" id="e-cat">${opt(S.cats.map(c=>[c.c,c.l]),p.cat)}</select></div><div class="fld"><label for="e-nat">Nationalité</label><input class="inp" id="e-nat" value="${esc(p.nat)}"></div>
    <div class="fld"><label for="e-org">Organisation</label><input class="inp" id="e-org" list="orgs" value="${esc(p.org)}"><datalist id="orgs">${[...new Set(S.persons.map(x=>x.org))].sort().map(o=>`<option value="${esc(o)}">`).join('')}</datalist></div>
    <div class="fld"><label for="e-fct">Fonction / discipline</label><input class="inp" id="e-fct" value="${esc(p.fct)}"></div>
+   ${S.events.length?`<div class="fld"><label for="e-ev">Événement</label><select class="inp" id="e-ev" onchange="evGrpUI('e')">${opt(S.events.filter(e=>!e.arch||e.id===p.ev).map(e=>[e.id,e.l+' ('+e.type+')']),p.ev||'','Non classé')}</select></div>
+   <div class="fld"><label for="e-grp" id="e-grp-l">${esc((EV(p.ev)||{gl:'Sous-classement'}).gl)}</label><input class="inp" id="e-grp" list="e-grps" value="${esc(p.grp||'')}" ${EV(p.ev)?'':'disabled'} placeholder="Choisir ou saisir"><datalist id="e-grps">${evGroups(EV(p.ev)).map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>`:''}
    <div class="fld full"><label for="e-addr">Adresse</label><input class="inp" id="e-addr" value="${esc(p.addr)}"></div>
    <div class="fld"><label for="e-tel">Téléphone</label><input class="inp" id="e-tel" type="tel" value="${esc(p.tel)}"></div><div class="fld"><label for="e-email">E-mail</label><input class="inp" id="e-email" type="email" value="${esc(p.email)}"></div>
    <div class="fld"><label for="e-ph">Photo d'identité</label><input class="inp" id="e-ph" type="file" accept="image/*" onchange="readPh(this)"></div>
    <div class="fld"><label>&nbsp;</label><label style="font-weight:500;display:flex;gap:8px;align-items:center"><input type="checkbox" id="e-doc" ${p.doc?'checked':''}> Pièce d'identité fournie et lisible</label></div></div>`,
   `${id&&can('admin')?`<button class="btn bad" style="margin-right:auto" onclick="delP('${id}')">Supprimer</button>`:''}<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="saveP('${id||''}')">Enregistrer</button>`);
 }
+function evGrpUI(k){const e=EV($('#'+k+'-ev').value),i=$('#'+k+'-grp');$('#'+k+'-grp-l').textContent=e?e.gl:'Sous-classement';i.disabled=!e;if(!e)i.value='';$('#'+k+'-grps').innerHTML=evGroups(e).map(g=>`<option value="${esc(g)}">`).join('')}
+const evFields=(k,ev,grp)=>`<div class="fld"><label for="${k}-ev">Événement</label><select class="inp" id="${k}-ev" onchange="evGrpUI('${k}')">${opt(S.events.filter(e=>!e.arch).map(e=>[e.id,e.l+' ('+e.type+')']),ev||'','Non classé')}</select></div>
+   <div class="fld"><label for="${k}-grp" id="${k}-grp-l">${esc((EV(ev)||{gl:'Sous-classement'}).gl)}</label><input class="inp" id="${k}-grp" list="${k}-grps" value="${esc(grp||'')}" ${EV(ev)?'':'disabled'} placeholder="Choisir ou saisir"><datalist id="${k}-grps">${evGroups(EV(ev)).map(g=>`<option value="${esc(g)}">`).join('')}</datalist></div>`;
+function classAsk(){modal('Classer '+SEL.size+' dossier(s)',`<div class="form">${evFields('k',EV(UI.ev)?UI.ev:'','')}</div><p style="font-size:12px;color:var(--ink3);margin:10px 0 0">Les dossiers sélectionnés sont rattachés à l'événement choisi. « Non classé » retire le rattachement.</p>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="classDo()">Classer</button>`)}
+function classDo(){const ev=$('#k-ev').value,grp=ev?$('#k-grp').value.trim():'',n=SEL.size;[...SEL].forEach(id=>{const p=P(id);if(p){p.ev=ev;p.grp=grp}});
+  log('Événements',`${n} dossier(s) ${ev?'classé(s) dans « '+EV(ev).l+' »'+(grp?' — '+grp:''):'retiré(s) de leur événement'}`);SEL.clear();closeAll();render();toast(n+' dossier(s) classé(s)')}
 function readPh(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=348;c.height=438;const k=Math.max(348/im.width,438/im.height),w=im.width*k,h=im.height*k;c.getContext('2d').drawImage(im,(348-w)/2,(438-h)/2,w,h);PH=c.toDataURL('image/jpeg',.82);toast('Photo chargée')};im.src=r.result};r.readAsDataURL(f)}
 function saveP(id){
   const g=k=>$('#e-'+k).value.trim(),ln=g('ln'),fn=g('fn');if(!ln||!fn||!g('org')){toast('Nom, prénom et organisation sont obligatoires');return}
   let p=id?P(id):null;
-  if(!p){const n=Math.max(...S.persons.map(x=>parseInt(x.id)))+1+Math.floor(Math.random()*20);p={id:n+'-'+(10+Math.floor(Math.random()*80)),bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:'',hasPh:false,photo:''};S.persons.unshift(p)}
-  Object.assign(p,{ln,fn,sx:g('sx'),dob:g('dob'),cat:g('cat'),nat:g('nat'),org:g('org'),fct:g('fct'),addr:g('addr'),tel:g('tel'),email:g('email'),doc:$('#e-doc').checked});if(PH){p.photo=PH;p.hasPh=true}
+  if(!p){const n=newId()+1+Math.floor(Math.random()*20);p={id:n+'-'+(10+Math.floor(Math.random()*80)),bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:'',hasPh:false,photo:''};S.persons.unshift(p)}
+  Object.assign(p,{ln,fn,sx:g('sx'),dob:g('dob'),cat:g('cat'),nat:g('nat'),org:g('org'),fct:g('fct'),addr:g('addr'),tel:g('tel'),email:g('email'),doc:$('#e-doc').checked});if($('#e-ev')){p.ev=g('ev');p.grp=p.ev?g('grp'):''}else{p.ev=p.ev||'';p.grp=p.grp||''}if(PH){p.photo=PH;p.hasPh=true}
   log('Dossiers',(id?'Modification de ':'Création de ')+nm(p),p.id);closeAll();render();openP(p.id);toast('Dossier enregistré');
 }
 function delP(id){const p=P(id);modal('Supprimer le dossier',`<p style="margin:0">Supprimer définitivement le dossier de <b>${esc(nm(p))}</b> ? Cette action est tracée dans le journal d'audit.</p>`,
   `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn bad" onclick="doDel('${id}')">Supprimer</button>`)}
 function importCSV(){modal('Import en masse',`<p style="margin:0 0 10px;color:var(--ink2)">Une ligne par personne, séparateur point-virgule. Les dossiers sont créés au statut « Brouillon ».</p>
-  <pre style="background:var(--sky3);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;overflow-x:auto;margin:0 0 10px">nom;prenom;sexe;date_naissance;categorie;organisation;fonction;nationalite</pre>
+  <pre style="background:var(--sky3);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;overflow-x:auto;margin:0 0 10px">nom;prenom;sexe;date_naissance;categorie;organisation;fonction;nationalite;evenement;sous_classement</pre>
   <p style="margin:0 0 6px;font-size:12px;color:var(--ink3)">Codes catégorie : ${S.cats.map(c=>c.c+' = '+esc(c.l)).join(', ')}.</p>
+  <p style="margin:0 0 6px;font-size:12px;color:var(--ink3)">Les deux dernières colonnes sont facultatives : nom exact de l'événement${EV(UI.ev)?' (par défaut : '+esc(EV(UI.ev).l)+')':''} et sous-classement (sport, table, délégation…).</p>
   <textarea class="inp" id="imp" style="min-height:150px;font:12px ui-monospace,Menlo,monospace" placeholder="Diop;Awa;F;2009-04-12;ATH;Sénégal;Natation;Sénégal"></textarea>
   <div class="fld" style="margin-top:10px"><label for="imp-f">Ou charger un fichier CSV</label><input class="inp" id="imp-f" type="file" accept=".csv,.txt" onchange="const r=new FileReader();r.onload=()=>$('#imp').value=r.result;r.readAsText(this.files[0])"></div>`,
   `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="doImport()">Importer</button>`)}
 function doImport(){
-  let ok=0,ko=0,seq=Math.max(...S.persons.map(x=>parseInt(x.id)));
+  let ok=0,ko=0,seq=newId();const evBy=t=>{t=(t||'').toLowerCase();return S.events.find(e=>e.id.toLowerCase()===t||e.l.toLowerCase()===t)};
   $('#imp').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const a=l.split(/;|\t/).map(x=>x.trim());
     if(a[0].toLowerCase()==='nom')return;const c=(a[4]||'').toUpperCase();
     if(a.length<6||!a[0]||!a[1]||!S.cats.some(x=>x.c===c)){ko++;return}
-    seq+=7;S.persons.unshift({id:seq+'-'+(10+ok%80),ln:a[0],fn:a[1],sx:(a[2]||'').toUpperCase()==='M'?'M':'F',dob:/^\d{4}-\d{2}-\d{2}$/.test(a[3])?a[3]:'',cat:c,org:a[5],fct:a[6]||'',nat:a[7]||'',photo:'',hasPh:false,doc:false,bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:''});ok++});
+    seq+=7;S.persons.unshift({id:seq+'-'+(10+ok%80),ln:a[0],fn:a[1],sx:(a[2]||'').toUpperCase()==='M'?'M':'F',dob:/^\d{4}-\d{2}-\d{2}$/.test(a[3])?a[3]:'',cat:c,org:a[5],fct:a[6]||'',nat:a[7]||'',ev:(evBy(a[8])||EV(UI.ev)||{id:''}).id,grp:(evBy(a[8])||EV(UI.ev))?a[9]||'':'',photo:'',hasPh:false,doc:false,bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:''});ok++});
   if(!ok&&!ko){toast('Aucune ligne à importer');return}
   log('Dossiers',`Import en masse : ${ok} créé(s), ${ko} rejeté(s)`);closeAll();F.st='DRAFT';render();toast(`${ok} dossier(s) importé(s)${ko?`, ${ko} ligne(s) rejetée(s)`:''}`);
 }
@@ -515,7 +573,7 @@ function doDel(id){const p=P(id),n=nm(p);S.persons=S.persons.filter(x=>x.id!==id
 
 /* ============ Revue des données ============ */
 V.revue=()=>{
-  const live=S.persons.filter(p=>p.st!=='REJ'),sub=live.filter(p=>p.st==='SUB');
+  const live=PS().filter(p=>p.st!=='REJ'),sub=live.filter(p=>p.st==='SUB');
   const rows=(UI.rule?live.filter(p=>issues(p).includes(UI.rule)):sub).slice().sort((a,b)=>blocking(b).length-blocking(a).length||issues(b).length-issues(a).length);
   const clean=sub.filter(p=>!blocking(p).length);
   return `<div class="note">La revue contrôle chaque dossier soumis avant approbation. Une anomalie <b>bloquante</b> (en rouge) empêche l'approbation tant qu'elle n'est pas corrigée ; les autres sont des points d'attention.</div>
@@ -530,12 +588,12 @@ V.revue=()=>{
    </tbody></table></div>${rows.length>80?`<div class="pg">80 premiers dossiers affichés sur ${rows.length}. Exportez pour la liste complète.</div>`:''}</div>`;
 };
 let RV=[];
-function approveClean(){let n=0;S.persons.filter(p=>p.st==='SUB').forEach(p=>{if(setSt(p.id,'APP',null,1))n++});render();toast(n+' dossier(s) approuvé(s)')}
+function approveClean(){let n=0;PS().filter(p=>p.st==='SUB').forEach(p=>{if(setSt(p.id,'APP',null,1))n++});render();toast(n+' dossier(s) approuvé(s)')}
 
 /* ============ Vérifications ============ */
 V.verif=()=>{
-  const rows=S.persons.filter(p=>p.bg!=='OK'&&p.st!=='REJ');
-  return `<div class="kpis">${[['En attente',rows.filter(p=>p.bg==='PEND').length],['Signalées',rows.filter(p=>p.bg==='FLAG').length],['Conformes',S.persons.filter(p=>p.bg==='OK').length]].map(x=>`<div class="kpi" style="cursor:default"><small>${x[0]}</small><b class="num">${x[1]}</b></div>`).join('')}</div>
+  const rows=PS().filter(p=>p.bg!=='OK'&&p.st!=='REJ');
+  return `<div class="kpis">${[['En attente',rows.filter(p=>p.bg==='PEND').length],['Signalées',rows.filter(p=>p.bg==='FLAG').length],['Conformes',PS().filter(p=>p.bg==='OK').length]].map(x=>`<div class="kpi" style="cursor:default"><small>${x[0]}</small><b class="num">${x[1]}</b></div>`).join('')}</div>
   <div class="card"><div class="card-h"><h3>Vérifications à statuer</h3></div><div class="tw"><table class="t"><thead><tr><th>Titulaire</th><th>Catégorie</th><th>Organisation</th><th>État</th><th>Dossier</th><th></th></tr></thead><tbody>
   ${rows.map(p=>`<tr class="row" onclick="openP('${p.id}')"><td><b>${esc(nm(p))}</b><small class="num">${p.id}</small></td><td>${esc(cat(p.cat).l)}</td><td>${esc(p.org)}</td><td>${p.bg==='FLAG'?'<span class="chip b">Signalée</span>':'<span class="chip w">En attente</span>'}</td><td>${pill(p.st)}</td>
    <td class="r" onclick="event.stopPropagation()" style="white-space:nowrap">${can('review')?`<button class="btn sm" onclick="setBg('${p.id}','OK')">Conforme</button> ${p.bg!=='FLAG'?`<button class="btn sm bad" onclick="setBg('${p.id}','FLAG')">Signaler</button>`:''}`:''}</td></tr>`).join('')||'<tr><td colspan="6" class="empty">Toutes les vérifications sont statuées.</td></tr>'}</tbody></table></div></div>`;
@@ -616,12 +674,12 @@ function badge(p,back){
 
 /* ============ Template d'accréditation ============ */
 V.tpl=()=>{
-  const T=S.tpl,ed=can('matrix'),p=P(UI.tplP)||S.persons.find(x=>x.cat==='STF')||S.persons[0],dis=ed?'':'disabled';
+  const T=S.tpl,ed=can('matrix'),none=!S.persons.length,p=P(UI.tplP)||S.persons.find(x=>x.cat==='STF')||S.persons[0]||{id:'000000-00',ln:'Spécimen',fn:'Prénom',sx:'',dob:'',nat:'',cat:(S.cats.find(c=>c.c==='STF')||S.cats[0]).c,org:'Organisation',fct:'Fonction',photo:'',hasPh:false,doc:true,bg:'OK',st:'APP',xz:[],xp:[],xm:0,note:'',ev:'',grp:''},dis=ed?'':'disabled';
   const chk=(k,l)=>`<label style="display:flex;gap:8px;align-items:center;padding:4px 0"><input type="checkbox" ${dis} ${T[k]?'checked':''} onchange="tplSet('${k}',this.checked?1:0)"> ${l}</label>`;
   return `<div class="grid" style="grid-template-columns:minmax(0,340px) minmax(0,1fr);align-items:start" id="tpl-g">
   <div class="grid">
    <div class="card"><div class="card-h"><h3>Aperçu sur un dossier</h3></div><div class="card-b"><div class="fld"><label for="t-p">Titulaire</label><select class="inp" id="t-p" onchange="UI.tplP=this.value;render()">${S.cats.map(c=>`<optgroup label="${esc(c.l)}">${S.persons.filter(x=>x.cat===c.c).slice(0,8).map(x=>`<option value="${x.id}"${x.id===p.id?' selected':''}>${esc(nm(x))}</option>`).join('')}</optgroup>`).join('')}</select></div>
-    <div class="tb" style="margin-top:12px"><button class="btn p" ${can('print')?'':'disabled'} onclick="printIds(['${p.id}'],1)">Imprimer un spécimen</button><button class="btn" onclick="openP('${p.id}')">Ouvrir le dossier</button></div></div></div>
+    <div class="tb" style="margin-top:12px"><button class="btn p" ${can('print')&&!none?'':'disabled'} onclick="printIds(['${p.id}'],1)">Imprimer un spécimen</button><button class="btn" ${none?'disabled':''} onclick="openP('${p.id}')">Ouvrir le dossier</button></div>${none?'<p style="margin:10px 0 0;font-size:12px;color:var(--ink3)">Aucun dossier pour le moment : l\'aperçu utilise un titulaire fictif.</p>':''}</div></div>
    <div class="card"><div class="card-h"><h3>Réglages du gabarit</h3></div><div class="card-b">
     <div class="fld"><label>Couleur de la bande de privilèges</label><div class="tb">${[['#15803D','Vert'],['#E3000F','Rouge'],['#1D4ED8','Bleu'],['#111111','Noir']].map(c=>`<button class="sw${T.bar===c[0]?' on':''}" ${dis} style="background:${c[0]}" title="${c[1]}" aria-label="${c[1]}" onclick="tplSet('bar','${c[0]}')"></button>`).join('')}</div></div>
     <div class="form" style="margin-top:12px"><div class="fld"><label for="t-ev">Événement</label><input class="inp" id="t-ev" ${dis} value="${esc(T.ev)}" onchange="tplSet('ev',this.value)"></div><div class="fld"><label for="t-sub">Sous-titre</label><input class="inp" id="t-sub" ${dis} value="${esc(T.sub)}" onchange="tplSet('sub',this.value)"></div>
@@ -637,9 +695,9 @@ function tplSet(k,v){S.tpl[k]=v;log('Template','Réglage « '+k+' » modifié');
 
 /* ============ Impression ============ */
 V.print=()=>{
-  const tabs=[['APP','À imprimer'],['PRT','Imprimés, à remettre'],['DLV','Remis']],rows=S.persons.filter(p=>p.st===UI.pt);CUR=rows;
+  const tabs=[['APP','À imprimer'],['PRT','Imprimés, à remettre'],['DLV','Remis']],rows=PS().filter(p=>p.st===UI.pt);CUR=rows;
   const selN=[...SEL].filter(id=>rows.some(p=>p.id===id)).length;
-  return `<div class="card"><div class="card-h"><div class="tabs">${tabs.map(t=>`<button class="tab${UI.pt===t[0]?' on':''}" onclick="UI.pt='${t[0]}';SEL.clear();render()">${t[1]} <span class="num">${S.persons.filter(p=>p.st===t[0]).length}</span></button>`).join('')}</div><span class="sp"></span>
+  return `<div class="card"><div class="card-h"><div class="tabs">${tabs.map(t=>`<button class="tab${UI.pt===t[0]?' on':''}" onclick="UI.pt='${t[0]}';SEL.clear();render()">${t[1]} <span class="num">${PS().filter(p=>p.st===t[0]).length}</span></button>`).join('')}</div><span class="sp"></span>
    ${can('export')?`<button class="btn" onclick="runExport('man')">Manifeste</button>`:''}
    ${can('print')&&UI.pt!=='DLV'?`<button class="btn" onclick="CUR.slice(0,24).forEach(p=>SEL.add(p.id));render()">Sélectionner un lot de 24</button><button class="btn p" ${selN?'':'disabled'} onclick="printIds([...SEL])">${UI.pt==='PRT'?'Réimprimer':'Imprimer'} la sélection (${selN})</button>`:''}
    ${can('print')&&UI.pt==='PRT'?`<button class="btn ok" ${selN?'':'disabled'} onclick="[...SEL].forEach(id=>setSt(id,'DLV',null,1));SEL.clear();render();toast('Remise enregistrée')">Marquer remis</button>`:''}</div>
@@ -664,19 +722,20 @@ function printDone(){PRN.forEach(id=>setSt(id,'PRT',null,1));log('Impression',`L
 
 /* ============ Rapports ============ */
 const REP={
- cat:['Synthèse par catégorie','Effectifs par catégorie et par statut',()=>[['Catégorie',...Object.values(ST),'Total'],...S.cats.map(c=>{const a=S.persons.filter(p=>p.cat===c.c);return[c.l,...Object.keys(ST).map(s=>a.filter(p=>p.st===s).length),a.length]}),['Total',...Object.keys(ST).map(s=>S.persons.filter(p=>p.st===s).length),S.persons.length]]],
- org:['Synthèse par organisation','Dossiers, approbations et anomalies par organisation',()=>{const m={};S.persons.forEach(p=>{const o=m[p.org]=m[p.org]||[p.org,cat(p.cat).l,0,0,0,0];o[2]++;if(['APP','PRT','DLV'].includes(p.st))o[3]++;if(['PRT','DLV'].includes(p.st))o[4]++;if(p.st!=='REJ'&&blocking(p).length)o[5]++});return[['Organisation','Catégorie principale','Dossiers','Approuvés','Imprimés','Avec anomalie bloquante'],...Object.values(m).sort((a,b)=>b[2]-a[2])]}],
- zone:['Accès par zone et privilège','Nombre de personnes autorisées (dossiers approuvés ou plus)',()=>{const a=S.persons.filter(p=>['APP','PRT','DLV'].includes(p.st));return[['Type','Code','Libellé','Personnes autorisées','Dont ajouts individuels'],...S.zones.map(z=>['Zone',z.c,z.n,a.filter(p=>eff(p).z.some(x=>x.c===z.c)).length,a.filter(p=>p.xz.includes(z.c)).length]),...S.privs.map(x=>['Privilège',x.c,x.n,a.filter(p=>eff(p).p.some(y=>y.c===x.c)).length,a.filter(p=>p.xp.includes(x.c)).length]),['Service','—','Restauration',a.filter(p=>eff(p).m).length,a.filter(p=>p.xm).length]]}],
- qual:['Qualité des données','Liste des dossiers présentant au moins une anomalie',()=>[['N° dossier','Nom','Prénom','Catégorie','Organisation','Statut','Anomalies bloquantes','Points d\'attention'],...S.persons.filter(p=>p.st!=='REJ'&&issues(p).length).map(p=>[p.id,p.ln,p.fn,cat(p.cat).l,p.org,ST[p.st],blocking(p).map(k=>rule(k)[1]).join(' | '),issues(p).filter(k=>!rule(k)[2]).map(k=>rule(k)[1]).join(' | ')])]],
+ cat:['Synthèse par catégorie','Effectifs par catégorie et par statut',()=>[['Catégorie',...Object.values(ST),'Total'],...S.cats.map(c=>{const a=PS().filter(p=>p.cat===c.c);return[c.l,...Object.keys(ST).map(s=>a.filter(p=>p.st===s).length),a.length]}),['Total',...Object.keys(ST).map(s=>PS().filter(p=>p.st===s).length),PS().length]]],
+ org:['Synthèse par organisation','Dossiers, approbations et anomalies par organisation',()=>{const m={};PS().forEach(p=>{const o=m[p.org]=m[p.org]||[p.org,cat(p.cat).l,0,0,0,0];o[2]++;if(['APP','PRT','DLV'].includes(p.st))o[3]++;if(['PRT','DLV'].includes(p.st))o[4]++;if(p.st!=='REJ'&&blocking(p).length)o[5]++});return[['Organisation','Catégorie principale','Dossiers','Approuvés','Imprimés','Avec anomalie bloquante'],...Object.values(m).sort((a,b)=>b[2]-a[2])]}],
+ zone:['Accès par zone et privilège','Nombre de personnes autorisées (dossiers approuvés ou plus)',()=>{const a=PS().filter(p=>['APP','PRT','DLV'].includes(p.st));return[['Type','Code','Libellé','Personnes autorisées','Dont ajouts individuels'],...S.zones.map(z=>['Zone',z.c,z.n,a.filter(p=>eff(p).z.some(x=>x.c===z.c)).length,a.filter(p=>p.xz.includes(z.c)).length]),...S.privs.map(x=>['Privilège',x.c,x.n,a.filter(p=>eff(p).p.some(y=>y.c===x.c)).length,a.filter(p=>p.xp.includes(x.c)).length]),['Service','—','Restauration',a.filter(p=>eff(p).m).length,a.filter(p=>p.xm).length]]}],
+ qual:['Qualité des données','Liste des dossiers présentant au moins une anomalie',()=>[['N° dossier','Nom','Prénom','Catégorie','Organisation','Statut','Anomalies bloquantes','Points d\'attention'],...PS().filter(p=>p.st!=='REJ'&&issues(p).length).map(p=>[p.id,p.ln,p.fn,cat(p.cat).l,p.org,ST[p.st],blocking(p).map(k=>rule(k)[1]).join(' | '),issues(p).filter(k=>!rule(k)[2]).map(k=>rule(k)[1]).join(' | ')])]],
  acc:['Ajouts d\'accès','Toutes les demandes d\'ajout et leur décision',()=>[['Réf.','N° dossier','Titulaire','Catégorie','Type','Code','Justification','Demandé par','Date','État','Décidé par'],...S.reqs.map(q=>{const p=P(q.pid);return[q.id,q.pid,nm(p),p?cat(p.cat).l:'',{zone:'Zone',priv:'Privilège',meal:'Restauration'}[q.type],q.code,q.motif,q.by,fmtT(q.t),RQ[q.st],q.dec]})]],
- man:['Manifeste d\'impression','Accréditations approuvées, imprimées et remises',()=>[['N° dossier','Nom','Prénom','Catégorie','Organisation','Zones','Privilèges','Restauration','État'],...S.persons.filter(p=>['APP','PRT','DLV'].includes(p.st)).map(p=>{const e=eff(p);return[p.id,p.ln,p.fn,cat(p.cat).l,p.org,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',ST[p.st]]})]],
- full:['Extraction complète','Tous les dossiers, tous les champs',()=>[HEAD_FR,...S.persons.map(line)]],
+ man:['Manifeste d\'impression','Accréditations approuvées, imprimées et remises',()=>[['N° dossier','Nom','Prénom','Catégorie','Organisation','Zones','Privilèges','Restauration','État'],...PS().filter(p=>['APP','PRT','DLV'].includes(p.st)).map(p=>{const e=eff(p);return[p.id,p.ln,p.fn,cat(p.cat).l,p.org,e.z.map(z=>z.c).join(' '),e.p.map(x=>x.c).join(' '),e.m?'oui':'non',ST[p.st]]})]],
+ ev:['Synthèse par événement','Dossiers par événement et par sous-classement (sport, table, délégation…)',()=>{const m=new Map();PS().forEach(p=>{const e=EV(p.ev),k=(e?e.id:'')+'|'+(e?p.grp:'');const o=m.get(k)||m.set(k,[e?e.l:'Sans événement',e?e.type:'',e?e.date:'',e?(p.grp||'(non précisé)'):'',0,0,0]).get(k);o[4]++;if(['APP','PRT','DLV'].includes(p.st))o[5]++;if(['PRT','DLV'].includes(p.st))o[6]++});return[['Événement','Type','Date','Sous-classement','Dossiers','Approuvés','Imprimés / remis'],...[...m.values()].sort((a,b)=>a[0].localeCompare(b[0])||b[4]-a[4])]}],
+ full:['Extraction complète','Tous les dossiers, tous les champs',()=>[HEAD_FR,...PS().map(line)]],
  priv:['Rôles et privilèges','Utilisateurs, rôles et permissions associées',()=>[['Utilisateur','E-mail','Rôle','Organisation','Actif',...PERMS.map(p=>p[1])],...S.users.map(u=>[u.n,u.e,u.role,u.org,u.on?'oui':'non',...PERMS.map(p=>(S.roles[u.role]||[]).includes(p[0])?'oui':'non')])]],
  aud:['Journal d\'audit','Historique des actions',()=>[['Date','Utilisateur','Domaine','Détail','N° dossier'],...S.audit.map(a=>[fmtT(a.t),a.u,a.a,a.d,a.pid])]]
 };
 function runExport(k){xlsxOut('rapport_'+k,()=>[{title:REP[k][0],rows:REP[k][2]()}])}
 function exportAll(){xlsxOut('classeur_complet',()=>Object.values(REP).map(r=>({title:r[0],rows:r[2]()})))}
-const HEAD_FR=['N° dossier','Nom','Prénom','Sexe','Date de naissance','Nationalité','Catégorie','Organisation','Fonction','Adresse','Téléphone','E-mail','Statut','Vérification','Zones','Privilèges','Restauration','Anomalies'];
+const HEAD_FR=['N° dossier','Nom','Prénom','Sexe','Date de naissance','Nationalité','Catégorie','Organisation','Fonction','Adresse','Téléphone','E-mail','Statut','Vérification','Zones','Privilèges','Restauration','Anomalies','Événement','Type d\'événement','Sous-classement'];
 /* Export Excel : relit d'abord la base, puis écrit un classeur typé (nombres, dates) avec en-têtes figés et filtres. */
 async function xlsxOut(name,build){
   if(!window.ExcelJS){toast('Export Excel indisponible : le générateur n\'a pas pu être chargé');return}
@@ -785,15 +844,16 @@ V.inv=()=>{
   <div class="kpis">${[['Invitations',L.length],['Dossiers déposés',L.filter(i=>i.done).length],['En attente',L.filter(i=>!i.done).length]].map(x=>`<div class="kpi" style="cursor:default"><small>${x[0]}</small><b class="num">${x[1]}</b></div>`).join('')}</div>
   <div class="card"><div class="card-h"><h3>Liens envoyés</h3><span class="sp"></span>${can('edit')?`<button class="btn p" onclick="invNew('')">Nouvelle invitation</button>`:''}</div>
   <div class="tw"><table class="t"><thead><tr><th>E-mail</th><th>Catégorie</th><th>Organisation</th><th>Créée par</th><th>Dernier envoi</th><th>État</th><th></th></tr></thead><tbody>
-  ${L.map(i=>`<tr${i.pid&&P(i.pid)?` class="row" onclick="openP('${i.pid}')"`:''}><td><b>${esc(i.email)}</b></td><td>${esc(cat(i.cat).l)}</td><td>${esc(i.org)}</td><td>${esc(i.by)}</td><td class="num">${fmtT(i.t)}</td>
+  ${L.map(i=>`<tr${i.pid&&P(i.pid)?` class="row" onclick="openP('${i.pid}')"`:''}><td><b>${esc(i.email)}</b></td><td>${esc(cat(i.cat).l)}${EV(i.ev)?`<small>${esc(EV(i.ev).l)}${i.grp?' · '+esc(i.grp):''}</small>`:''}</td><td>${esc(i.org)}</td><td>${esc(i.by)}</td><td class="num">${fmtT(i.t)}</td>
    <td>${i.done?'<span class="pill s-APP">Dossier déposé</span>':'<span class="pill s-PEND">En attente</span>'}</td><td class="r" onclick="event.stopPropagation()">${can('edit')?`<button class="btn sm" onclick="invSend({resend:${i.id}})">Nouveaux accès</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">Aucune invitation pour le moment.</td></tr>'}</tbody></table></div></div>`;
 };
 function invNew(defCat){modal('Inviter et créer le compte Client',`<div class="form">
   <div class="fld full"><label for="i-em">Adresses e-mail (une par ligne, 50 maximum)</label><textarea class="inp" id="i-em" placeholder="prenom.nom@exemple.com"></textarea></div>
   <div class="fld"><label for="i-cat">Catégorie</label><select class="inp" id="i-cat">${opt(S.cats.map(c=>[c.c,c.l]),defCat||S.cats[0].c)}</select></div>
-  <div class="fld"><label for="i-org">Organisation</label><input class="inp" id="i-org" list="i-orgs" value="${can('admin')?'':esc(me().org)}"><datalist id="i-orgs">${[...new Set(S.persons.map(x=>x.org))].sort().map(o=>`<option value="${esc(o)}">`).join('')}</datalist></div></div>
+  <div class="fld"><label for="i-org">Organisation</label><input class="inp" id="i-org" list="i-orgs" value="${can('admin')?'':esc(me().org)}"><datalist id="i-orgs">${[...new Set(S.persons.map(x=>x.org))].sort().map(o=>`<option value="${esc(o)}">`).join('')}</datalist></div>
+  ${S.events.length?evFields('i',EV(UI.ev)?UI.ev:'',''):''}</div>
   <p style="font-size:12px;color:var(--ink3);margin:10px 0 0">Chaque personne reçoit son identifiant, son mot de passe et un lien direct. La catégorie et l'organisation sont fixées ici et ne sont pas modifiables par la personne.</p>`,
-  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" id="i-go" onclick="invSend({emails:$('#i-em').value.split(/[\\n,;]+/).map(x=>x.trim()).filter(Boolean),cat:$('#i-cat').value,org:$('#i-org').value.trim()})">Créer et envoyer</button>`)}
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" id="i-go" onclick="invSend({emails:$('#i-em').value.split(/[\\n,;]+/).map(x=>x.trim()).filter(Boolean),cat:$('#i-cat').value,org:$('#i-org').value.trim(),ev:$('#i-ev')?$('#i-ev').value:'',grp:$('#i-grp')?$('#i-grp').value.trim():''})">Créer et envoyer</button>`)}
 async function invSend(body){
   const b=$('#i-go');if(b)b.disabled=true;await flushNow();
   let r;try{r=await api('/api/invite',body)}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
@@ -837,7 +897,7 @@ async function showForm(token){
   let r;try{r=await api(token?'/api/form?t='+encodeURIComponent(token):'/api/me')}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
   if(!r.ok){pubBox(`<h2>${token?'Lien non valide':'Dossier indisponible'}</h2><p style="margin:0;color:var(--ink2)">${esc(r.j.error||'Ce lien ne fonctionne pas.')}${token?' Demandez un nouveau lien à votre organisation.':''}</p>`);return}
   const d=r.j,p=d.person||{ln:'',fn:'',addr:'',tel:'',fct:'',photo:''};
-  const head=`<h2>${esc(d.event)}</h2><p style="margin:0;color:var(--ink2)">${esc(d.category)} · ${esc(d.org)}<br><span style="font-size:12px;color:var(--ink3)">${esc(d.email)}</span></p>`;
+  const head=`<h2>${esc(d.event)}</h2><p style="margin:0;color:var(--ink2)">${esc(d.category)} · ${esc(d.org)}${d.group?' · '+esc(d.group):''}<br><span style="font-size:12px;color:var(--ink3)">${esc(d.email)}</span></p>`;
   if(!d.editable){pubBox(head+`<div class="note" style="margin:6px 0 0">Votre dossier a bien été reçu et est en cours de traitement (${esc(ST[d.status]||d.status)}). Il ne peut plus être modifié en ligne.</div>`);return}
   pubBox(head+`${d.note?`<div class="note w" style="margin:0"><b>À corriger :</b> ${esc(d.note)}</div>`:d.person?'<div class="note" style="margin:0">Votre dossier est déjà déposé. Vous pouvez encore le corriger ci-dessous.</div>':''}
   <form onsubmit="sendForm(event)" style="display:flex;flex-direction:column;gap:12px"><div class="form">

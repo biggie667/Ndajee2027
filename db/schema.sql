@@ -48,6 +48,18 @@ CREATE TABLE category_privileges (
   PRIMARY KEY (category_code, privilege_code)
 );
 
+CREATE TABLE events (
+  id          text PRIMARY KEY CHECK (id ~ '^[A-Za-z0-9]{1,16}$'),
+  label       text NOT NULL,
+  type        text NOT NULL DEFAULT 'Autre',
+  starts_on   date,
+  place       text NOT NULL DEFAULT '',
+  group_label text NOT NULL DEFAULT 'Groupe',
+  groups      text[] NOT NULL DEFAULT '{}',
+  archived    boolean NOT NULL DEFAULT false,
+  sort        int  NOT NULL DEFAULT 0
+);
+
 CREATE TABLE persons (
   id           text PRIMARY KEY,
   pos          bigserial NOT NULL,
@@ -69,12 +81,15 @@ CREATE TABLE persons (
   status       text NOT NULL DEFAULT 'DRAFT' CHECK (status IN ('DRAFT','SUB','RET','APP','REJ','PRT','DLV')),
   meal_extra   boolean NOT NULL DEFAULT false,
   review_note  text NOT NULL DEFAULT '',
+  event_id     text REFERENCES events(id) ON DELETE SET NULL,
+  grp          text NOT NULL DEFAULT '',
   created_at   timestamptz NOT NULL DEFAULT now(),
   updated_at   timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX persons_status_idx   ON persons (status);
 CREATE INDEX persons_category_idx ON persons (category_code);
 CREATE INDEX persons_pos_idx      ON persons (pos DESC);
+CREATE INDEX persons_event_idx    ON persons (event_id);
 CREATE TABLE person_zones (
   person_id text NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
   zone_code text NOT NULL REFERENCES zones(code) ON DELETE CASCADE,
@@ -106,6 +121,8 @@ CREATE TABLE invitations (
   category_code text NOT NULL REFERENCES categories(code),
   organisation  text NOT NULL,
   person_id     text UNIQUE REFERENCES persons(id) ON DELETE SET NULL,
+  event_id      text REFERENCES events(id) ON DELETE SET NULL,
+  grp           text NOT NULL DEFAULT '',
   created_by    text NOT NULL,
   created_at    timestamptz NOT NULL DEFAULT now(),
   last_sent_at  timestamptz,

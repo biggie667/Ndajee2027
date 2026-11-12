@@ -4,6 +4,7 @@ Application web d'accréditation hébergée sur Vercel, avec base PostgreSQL.
 
 ## Fonctions
 - Tableau de bord
+- Événements : classement des dossiers par événement (sportif, concert, dîner de gala, diplomatique… types libres) et par sous-classement propre à chaque événement (sport, table, délégation…) ; un sélecteur limite tout l'affichage à l'événement choisi
 - Demandes, revue des données, vérifications
 - Invitations : création automatique d'un compte Client (mot de passe généré, envoyé par e-mail) ; le client ne voit que son propre dossier (nom, prénom, adresse, téléphone, photo, fonction)
 - Notification par e-mail des dossiers incomplets (à la personne ou au représentant d'organisation)
