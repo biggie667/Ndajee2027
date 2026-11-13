@@ -222,7 +222,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   <aside class="side">
     <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-f">DG Groupe · v19<br>Données de démonstration</div>
+    <div class="side-f">DG Groupe · v20<br>Données de démonstration</div>
   </aside>
   <div class="wrap">
     <header class="top" id="top"></header>
@@ -346,6 +346,7 @@ const EV=id=>S.events.find(e=>e.id===id);
 const PS=()=>!UI.ev?S.persons:S.persons.filter(p=>UI.ev==='-'?!p.ev:p.ev===UI.ev);
 const evTxt=p=>{const e=EV(p.ev);return e?e.l+(p.grp?' · '+p.grp:''):''};
 const evGroups=e=>e?[...new Set([...e.gs,...S.persons.filter(p=>p.ev===e.id&&p.grp).map(p=>p.grp)])]:[];
+const bEv=p=>{const e=p&&EV(p.ev);return e?[e.l,[e.date?fmtD(e.date):'',e.place].filter(Boolean).join(' · ')||S.tpl.sub]:[S.tpl.ev,S.tpl.sub]};
 const newId=()=>Math.max(210000,...S.persons.map(x=>parseInt(x.id)||0));
 const cat=c=>S.cats.find(x=>x.c===c)||{c,l:c,b:c,col:'#555',pop:''};
 const nm=p=>p?`${p.fn} ${p.ln.toUpperCase()}`:'—';
@@ -687,7 +688,7 @@ function badge(p,back){
   if(back)return `<div class="bdg"><div class="b-bk">${ph}<div><h4>${esc(p.ln)}, ${esc(p.fn)}</h4><p>${esc(c.l)}</p><p class="i">${p.id}</p></div></div>
    ${T.showLeg?`<div class="b-leg"><div>${T.showZ?e.z.map(z=>`<div><i${z.o?' class="o"':''}>${esc(z.c)}</i><span>${esc(z.n)}</span></div>`).join(''):''}</div>
    <div>${e.p.map(x=>`<div><i class="n">${esc(x.c)}</i><span>${esc(x.n)}</span></div>`).join('')}<div><i class="c" style="background:${T.bar}"></i><span>${esc(T.gen)}</span></div>${T.showM&&e.m?`<div><i class="f">${FORK}</i><span>Restauration</span></div>`:''}</div></div>`:''}${bar}</div>`;
-  return `<div class="bdg"><div class="b-top">${ph}<div class="b-tr"><div class="b-ev">${T.showEv?`${esc(T.ev)}<small>${esc(T.sub)}</small>`:''}</div><div class="b-ban" style="background:${c.col}">${esc(c.b)}</div></div></div>
+  return `<div class="bdg"><div class="b-top">${ph}<div class="b-tr"><div class="b-ev">${T.showEv?`${esc(bEv(p)[0])}<small>${esc(bEv(p)[1])}</small>`:''}</div><div class="b-ban" style="background:${c.col}">${esc(c.b)}</div></div></div>
    <div class="b-name">${esc(p.fn)} ${esc(p.ln.toUpperCase())}</div><div class="b-fn">${esc(c.l)}</div><div class="b-org">${esc(p.fct)}${p.fct&&p.org?' · ':''}${esc(p.org)}</div>
    <div class="b-mid">${T.showM&&e.m?`<div class="b-meal">${FORK}</div>`:''}<div class="b-qr"><b>${p.id}</b>${qr(p.id)}</div></div>
    ${T.showZ?`<div class="b-zones">${e.z.map(z=>`<div class="b-z${z.o?' o':''}"><span>${esc(z.c)}</span></div>`).join('')}</div>`:''}${bar}</div>`;
@@ -842,7 +843,7 @@ function pdfBadge(doc,p,back,O){
       if(T.showM&&e.m){Y=y+r++*1.78;fork(16.75,Y,1.35);txt('Restauration',18.8,Y+.93,.74)}}
     bar();return}
   photo(2,2,11.6,14.6);
-  if(T.showEv){txt(T.ev.toUpperCase(),30.5,2.95,.95,{b:1,al:'right',max:15});txt(T.sub,30.5,4.05,.8,{al:'right',col:[85,85,85],max:15})}
+  if(T.showEv){txt(bEv(p)[0].toUpperCase(),30.5,2.95,.95,{b:1,al:'right',max:15});txt(bEv(p)[1],30.5,4.05,.8,{al:'right',col:[85,85,85],max:15})}
   rect(15.2,13.44,15.3,3.16,rgb(c.col));txt(c.b,22.85,15.55,1.55,{b:1,al:'center',col:[255,255,255],max:14.5});
   txt(p.fn+' '+p.ln.toUpperCase(),2,19.55,1.75,{max:28.5});txt(c.l,2,21.05,.98,{b:1,max:28.5});txt([p.fct,p.org].filter(Boolean).join(' · '),2,22.25,.98,{max:28.5});
   if(T.showM&&e.m)fork(8.6,28,2.6);
