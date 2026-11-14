@@ -1,6 +1,6 @@
-const { withTx } = require('../lib/db');
+const { withDb } = require('../lib/boot');
 const { handler } = require('../lib/auth');
-const { ensureDb } = require('../lib/store');
+const { integrity } = require('../lib/integrity');
 
 // Vérifie la clé du service d'envoi sans envoyer de message.
 async function mailStatus() {
@@ -14,11 +14,12 @@ async function mailStatus() {
     return { ...o, etat: 'clé refusée par Resend : ' + (j.message || r.status) };
   } catch (e) { return { ...o, etat: 'Resend injoignable' }; }
 }
-// État du service. Crée ou met à niveau la base si nécessaire.
+// État du service (public : uniquement des compteurs, aucune donnée nominative). Crée ou met à niveau la base si nécessaire.
 module.exports = handler('GET', async (req, res) => {
-  const r = await withTx(async c => {
-    await ensureDb(c);
-    return (await c.query("SELECT (SELECT count(*) FROM persons)::int AS dossiers, (SELECT count(*) FROM users WHERE active AND role<>'Client')::int AS comptes, (SELECT count(*) FROM users WHERE role='Client')::int AS comptes_clients, (SELECT count(*) FROM invitations)::int AS invitations")).rows[0];
+  const r = await withDb(async c => {
+    const n = (await c.query("SELECT (SELECT count(*) FROM persons)::int AS dossiers, (SELECT count(*) FROM users WHERE active AND role<>'Client')::int AS comptes, (SELECT count(*) FROM users WHERE role='Client')::int AS comptes_clients, (SELECT count(*) FROM invitations)::int AS invitations")).rows[0];
+    const i = await integrity(c, false);
+    return { ...n, schema: i.version, integrite: { bloquants: i.bloquants, attentions: i.attentions, infos: i.infos, detail: i.checks.filter(k => k.count).map(k => `${k.level} : ${k.label} (${k.count})`) } };
   });
   res.status(200).json({ ok: true, database: 'connectée', session: !!process.env.SESSION_SECRET, ...r, mail: await mailStatus() });
 });

@@ -1,21 +1,32 @@
--- NDAGE 2026 - Systeme d accreditation : schema PostgreSQL
--- Cree automatiquement au premier demarrage (voir lib/store.js).
+-- NDAGE 2026 - Systeme d accreditation : schema PostgreSQL (version 4)
+-- Cree automatiquement au premier demarrage, mis a niveau automatiquement ensuite (voir lib/store.js).
 
 CREATE TABLE roles (
   name        text PRIMARY KEY,
-  perms       text[] NOT NULL DEFAULT '{}'
+  perms       text[] NOT NULL DEFAULT '{}',
+  title       text NOT NULL DEFAULT '',      -- intitulé officiel du rôle
+  mission     text NOT NULL DEFAULT '',      -- ce que le rôle fait
+  scoped      boolean NOT NULL DEFAULT false -- vrai : ne voit que sa propre organisation
 );
 CREATE TABLE users (
   id          text PRIMARY KEY,
-  name        text NOT NULL,
-  email       text NOT NULL,
+  name        text NOT NULL CONSTRAINT users_name_chk CHECK (name <> ''),
+  email       text NOT NULL CONSTRAINT users_email_lower_chk CHECK (email = lower(email) AND email LIKE '%_@_%'),
   pass_hash   text NOT NULL,
   role        text NOT NULL REFERENCES roles(name) ON UPDATE CASCADE,
   org         text NOT NULL DEFAULT '',
+  job_title   text NOT NULL DEFAULT '',      -- poste exact de la personne
   active      boolean NOT NULL DEFAULT true,
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX users_email_key ON users (lower(email));
+
+-- Tentatives de connexion échouées (protection contre les essais répétés de mots de passe)
+CREATE TABLE login_attempts (
+  email text NOT NULL,
+  at    timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX login_attempts_idx ON login_attempts (email, at);
 
 CREATE TABLE categories (
   code        text PRIMARY KEY,
@@ -61,7 +72,7 @@ CREATE TABLE events (
 );
 
 CREATE TABLE persons (
-  id           text PRIMARY KEY,
+  id           text PRIMARY KEY CONSTRAINT persons_id_chk CHECK (id ~ '^[0-9]{4,9}-[0-9]{2}$'),
   pos          bigserial NOT NULL,
   last_name    text NOT NULL,
   first_name   text NOT NULL,
@@ -73,8 +84,8 @@ CREATE TABLE persons (
   function     text NOT NULL DEFAULT '',
   address      text NOT NULL DEFAULT '',
   phone        text NOT NULL DEFAULT '',
-  email        text NOT NULL DEFAULT '',
-  photo        text NOT NULL DEFAULT '',
+  email        text NOT NULL DEFAULT '' CONSTRAINT persons_email_lower_chk CHECK (email = lower(email)),
+  photo        text NOT NULL DEFAULT '' CONSTRAINT persons_photo_chk CHECK (photo = '' OR photo ~ '^data:image/(jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$'),
   has_photo    boolean NOT NULL DEFAULT false,
   doc_ok       boolean NOT NULL DEFAULT false,
   bg_status    text NOT NULL DEFAULT 'PEND' CHECK (bg_status IN ('PEND','OK','FLAG')),
@@ -84,12 +95,16 @@ CREATE TABLE persons (
   event_id     text REFERENCES events(id) ON DELETE SET NULL,
   grp          text NOT NULL DEFAULT '',
   created_at   timestamptz NOT NULL DEFAULT now(),
-  updated_at   timestamptz NOT NULL DEFAULT now()
+  updated_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT persons_identity_chk CHECK (last_name <> '' AND first_name <> '' AND organisation <> ''),
+  CONSTRAINT persons_group_chk CHECK (event_id IS NOT NULL OR grp = '')
 );
 CREATE INDEX persons_status_idx   ON persons (status);
 CREATE INDEX persons_category_idx ON persons (category_code);
 CREATE INDEX persons_pos_idx      ON persons (pos DESC);
 CREATE INDEX persons_event_idx    ON persons (event_id);
+CREATE INDEX persons_org_idx      ON persons (organisation);
+CREATE INDEX persons_email_idx    ON persons (email);
 CREATE TABLE person_zones (
   person_id text NOT NULL REFERENCES persons(id) ON DELETE CASCADE,
   zone_code text NOT NULL REFERENCES zones(code) ON DELETE CASCADE,
@@ -110,14 +125,16 @@ CREATE TABLE access_requests (
   requested_by text NOT NULL,
   requested_at timestamptz NOT NULL DEFAULT now(),
   status       text NOT NULL DEFAULT 'PEND' CHECK (status IN ('PEND','OK','NO')),
-  decided_by   text NOT NULL DEFAULT ''
+  decided_by   text NOT NULL DEFAULT '',
+  CONSTRAINT access_requests_code_chk CHECK ((type = 'meal') = (code = ''))
 );
 CREATE INDEX access_requests_person_idx ON access_requests (person_id);
+CREATE INDEX access_requests_status_idx ON access_requests (status);
 
 CREATE TABLE invitations (
   id            bigserial PRIMARY KEY,
   token_hash    text NOT NULL UNIQUE,
-  email         text NOT NULL,
+  email         text NOT NULL CONSTRAINT invitations_email_lower_chk CHECK (email = lower(email)),
   category_code text NOT NULL REFERENCES categories(code),
   organisation  text NOT NULL,
   person_id     text UNIQUE REFERENCES persons(id) ON DELETE SET NULL,
@@ -128,6 +145,7 @@ CREATE TABLE invitations (
   last_sent_at  timestamptz,
   submitted_at  timestamptz
 );
+CREATE INDEX invitations_email_idx ON invitations (email);
 
 CREATE TABLE audit_log (
   id         bigserial PRIMARY KEY,

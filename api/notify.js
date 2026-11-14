@@ -1,4 +1,4 @@
-const { withTx } = require('../lib/db');
+const { withDb } = require('../lib/boot');
 const { handler, requireUser } = require('../lib/auth');
 const { err, issuesOf, PERSON_SQL } = require('../lib/store');
 const { sendMail, baseUrl } = require('../lib/mail');
@@ -6,14 +6,15 @@ const { newToken, linkFor } = require('../lib/invites');
 
 // Signale un dossier incomplet à la personne concernée ou au(x) représentant(s) de son organisation.
 module.exports = handler('POST', async (req, res) => {
-  const b = req.body || {}, base = baseUrl(req), target = b.target === 'org' ? 'org' : 'person';
-  const m = await withTx(async c => {
+  const b = req.body, base = baseUrl(req), target = b.target === 'org' ? 'org' : 'person';
+  const m = await withDb(async c => {
     const user = await requireUser(c, req);
     if (!user.perms.includes('review')) throw err(403, `Votre rôle (${user.role}) ne permet pas de notifier un dossier.`);
     const p = (await c.query(PERSON_SQL + ' WHERE p.id=$1', [String(b.pid || '')])).rows[0];
-    if (!p) throw err(404, 'Dossier introuvable.');
+    if (!p || (user.scoped && p.org !== user.org)) throw err(404, 'Dossier introuvable.');
+    const year = (await c.query('SELECT extract(year from starts_on)::int y FROM events WHERE id=$1', [p.ev || null])).rows[0];
     const event = (await c.query("SELECT coalesce((SELECT label FROM events WHERE id=$1), (SELECT value->>'ev' FROM settings WHERE key='template')) ev", [p.ev || null])).rows[0].ev;
-    const points = issuesOf(p).map(i => '- ' + i[0]);
+    const points = issuesOf(p, year && year.y).map(i => '- ' + i[0]);
     if (p.note) points.push('- Commentaire du service accréditation : ' + p.note);
     if (!points.length) throw err(400, 'Ce dossier ne présente aucune anomalie à signaler.');
     const name = `${p.fn} ${p.ln.toUpperCase()}`;

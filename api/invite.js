@@ -1,40 +1,41 @@
 const crypto = require('crypto');
-const { withTx } = require('../lib/db');
+const { withDb } = require('../lib/boot');
 const { handler, requireUser, hashPassword } = require('../lib/auth');
-const { err, str } = require('../lib/store');
+const { err, str, EMAIL } = require('../lib/store');
 const { sendMail, baseUrl } = require('../lib/mail');
 const { newToken, newPassword, linkFor, inviteMail } = require('../lib/invites');
 
 // Crée (ou réinitialise) le compte Client associé à une adresse. Retourne le mot de passe à communiquer, ou '' si le compte existant est conservé.
 async function clientAccount(c, email, org, reset) {
-  const u = (await c.query('SELECT id, role FROM users WHERE lower(email)=$1', [email])).rows[0];
+  const u = (await c.query('SELECT id, role, active FROM users WHERE lower(email)=$1', [email])).rows[0];
   if (u && u.role !== 'Client') throw err(400, `${email} possède déjà un compte interne (${u.role}) : il ne peut pas recevoir d'invitation.`);
+  if (u && !u.active) throw err(400, `Le compte Client ${email} a été désactivé : réactivez-le dans « Utilisateurs & rôles » avant de l'inviter.`);
   if (u && !reset) return '';
   const pw = newPassword();
-  if (u) await c.query('UPDATE users SET pass_hash=$2, active=true WHERE id=$1', [u.id, hashPassword(pw)]);
-  else await c.query("INSERT INTO users (id,name,email,pass_hash,role,org,active) VALUES ($1,$2,$3,$4,'Client',$5,true)", ['c' + crypto.randomBytes(6).toString('hex'), email.split('@')[0].slice(0, 80), email, hashPassword(pw), org]);
+  if (u) await c.query('UPDATE users SET pass_hash=$2 WHERE id=$1', [u.id, hashPassword(pw)]);
+  else await c.query("INSERT INTO users (id,name,email,pass_hash,role,org,active,job_title) VALUES ($1,$2,$3,$4,'Client',$5,true,(SELECT title FROM roles WHERE name='Client'))", ['c' + crypto.randomBytes(6).toString('hex'), email.split('@')[0].slice(0, 80), email, hashPassword(pw), org]);
   return pw;
 }
 
 // Crée des invitations (une par e-mail, avec compte Client) ou régénère les accès d'une invitation existante.
 module.exports = handler('POST', async (req, res) => {
-  const b = req.body || {}, base = baseUrl(req);
-  const made = await withTx(async c => {
+  const b = req.body, base = baseUrl(req);
+  const made = await withDb(async c => {
     const user = await requireUser(c, req);
     if (!user.perms.includes('edit')) throw err(403, `Votre rôle (${user.role}) ne permet pas d'envoyer des invitations.`);
     const event = (await c.query("SELECT value->>'ev' ev FROM settings WHERE key='template'")).rows[0].ev;
     const out = [];
     if (b.resend) {
       const t = newToken();
-      const r = await c.query('UPDATE invitations i SET token_hash=$2, last_sent_at=now() FROM categories k WHERE i.id=$1 AND k.code=i.category_code RETURNING i.email, i.organisation org, k.label, (SELECT label FROM events e WHERE e.id=i.event_id) event', [Number(b.resend) || 0, t.hash]);
+      const r = await c.query('UPDATE invitations i SET token_hash=$2, last_sent_at=now() FROM categories k WHERE i.id=$1 AND k.code=i.category_code AND ($3::text IS NULL OR i.organisation=$3) RETURNING i.email, i.organisation org, k.label, (SELECT label FROM events e WHERE e.id=i.event_id) event', [Number(b.resend) || 0, t.hash, user.scoped ? user.org : null]);
       if (!r.rows[0]) throw err(404, 'Invitation introuvable.');
       const i = r.rows[0];
       out.push({ ...i, link: linkFor(base, t.token), password: await clientAccount(c, i.email.toLowerCase(), i.org, true) });
       await c.query('INSERT INTO audit_log (user_name,domain,detail) VALUES ($1,$2,$3)', [user.name, 'Invitations', `Accès régénérés pour ${i.email}`]);
     } else {
-      const emails = [...new Set((Array.isArray(b.emails) ? b.emails : []).map(e => str(e, 120).toLowerCase()).filter(Boolean))], org = str(b.org, 120);
+      const emails = [...new Set((Array.isArray(b.emails) ? b.emails : []).map(e => str(e, 120).toLowerCase()).filter(Boolean))], org = user.scoped ? user.org : str(b.org, 120);
       if (!emails.length || emails.length > 50) throw err(400, 'Indiquez entre 1 et 50 adresses e-mail.');
-      const bad = emails.find(e => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e));
+      const bad = emails.find(e => !EMAIL.test(e));
       if (bad) throw err(400, `Adresse e-mail invalide : ${bad}`);
       const cat = (await c.query('SELECT code, label FROM categories WHERE code=$1', [str(b.cat, 8)])).rows[0];
       if (!cat || !org) throw err(400, 'Catégorie et organisation sont obligatoires.');

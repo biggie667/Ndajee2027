@@ -3,6 +3,7 @@ const http = require('http'), fs = require('fs'), path = require('path');
 const PORT = process.env.PORT || 3000;
 http.createServer((req, res) => {
   const url = new URL(req.url, 'http://x');
+  for (const h of require('./vercel.json').headers[0].headers) if (h.key !== 'Strict-Transport-Security') res.setHeader(h.key, h.value);
   res.status = c => { res.statusCode = c; return res; };
   res.json = o => { res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(o)); };
   if (url.pathname.startsWith('/api/')) {
