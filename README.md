@@ -9,7 +9,7 @@ Plateforme web d'accréditation hébergée sur Vercel, avec base PostgreSQL.
 - Notification par e-mail des dossiers incomplets (à la personne ou au représentant de son organisation)
 - Matrice d'accès (zones / privilèges par catégorie) et ajouts d'accès individuels
 - Template d'accréditation (recto / verso) ; impression par lots sur feuille A5 paysage, avec export PDF
-- Rapports et exports Excel, import en masse
+- Rapports et exports Excel ; import en masse depuis un fichier Excel (.xlsx ou .xls), avec modèle téléchargeable et contrôle avant import
 - Utilisateurs (poste exact), rôles (intitulé officiel, mission, périmètre, privilèges), journal d'audit
 - Contrôle d'intégrité de la base (écran « Intégrité des données », réservé aux administrateurs)
 

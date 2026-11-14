@@ -225,7 +225,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   <aside class="side">
     <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-f">DG Groupe · v21</div>
+    <div class="side-f">DG Groupe · v22</div>
   </aside>
   <div class="wrap">
     <header class="top" id="top"></header>
@@ -584,21 +584,63 @@ function saveP(id){
 }
 function delP(id){const p=P(id);modal('Supprimer le dossier',`<p style="margin:0">Supprimer définitivement le dossier de <b>${esc(nm(p))}</b> ? Cette action est tracée dans le journal d'audit.</p>`,
   `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn bad" onclick="doDel('${id}')">Supprimer</button>`)}
-function importCSV(){modal('Import en masse',`<p style="margin:0 0 10px;color:var(--ink2)">Une ligne par personne, séparateur point-virgule. Les dossiers sont créés au statut « Brouillon ».</p>
-  <pre style="background:var(--sky3);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12px;overflow-x:auto;margin:0 0 10px">nom;prenom;sexe;date_naissance;categorie;organisation;fonction;nationalite;evenement;sous_classement</pre>
-  <p style="margin:0 0 6px;font-size:12px;color:var(--ink3)">Codes catégorie : ${S.cats.map(c=>c.c+' = '+esc(c.l)).join(', ')}.</p>
-  <p style="margin:0 0 6px;font-size:12px;color:var(--ink3)">Les deux dernières colonnes sont facultatives : nom exact de l'événement${EV(UI.ev)?' (par défaut : '+esc(EV(UI.ev).l)+')':''} et sous-classement (sport, table, délégation…).</p>
-  <textarea class="inp" id="imp" style="min-height:150px;font:12px ui-monospace,Menlo,monospace" placeholder="Diop;Awa;F;2009-04-12;ATH;Sénégal;Natation;Sénégal"></textarea>
-  <div class="fld" style="margin-top:10px"><label for="imp-f">Ou charger un fichier CSV</label><input class="inp" id="imp-f" type="file" accept=".csv,.txt" onchange="const r=new FileReader();r.onload=()=>$('#imp').value=r.result;r.readAsText(this.files[0])"></div>`,
-  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" onclick="doImport()">Importer</button>`)}
+/* ---- Import en masse depuis un fichier Excel (.xlsx ou .xls) ---- */
+const IMP_COLS=[['ln','Nom',1],['fn','Prénom',1],['sx','Sexe (F/M)',0],['dob','Date de naissance',0],['cat','Catégorie',1],['org','Organisation',1],['fct','Fonction',0],['nat','Nationalité',0],['addr','Adresse',0],['tel','Téléphone',0],['email','E-mail',0],['ev','Événement',0],['grp','Sous-classement',0]];
+const norm=t=>String(t??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const IMP_KEYS={nom:'ln',prenom:'fn',sexe:'sx',sexefm:'sx',datedenaissance:'dob',datenaissance:'dob',naissance:'dob',categorie:'cat',organisation:'org',fonction:'fct',nationalite:'nat',adresse:'addr',telephone:'tel',numero:'tel',email:'email',mail:'email',courriel:'email',evenement:'ev',sousclassement:'grp',groupe:'grp'};
+let IMP=null;
+function importCSV(){IMP=null;modal('Import en masse (Excel)',`<p style="margin:0 0 12px;color:var(--ink2)">Importez plusieurs dossiers d'un coup depuis un fichier Excel. Ils sont créés au statut « Brouillon ».</p>
+  <div class="sec" style="margin-top:0">1. Préparer le fichier</div>
+  <div class="tb"><button class="btn" onclick="impTemplate()">Télécharger le modèle Excel</button><span style="font-size:12px;color:var(--ink3)">Une ligne par personne. Colonnes obligatoires : Nom, Prénom, Catégorie, Organisation.</span></div>
+  <p style="margin:8px 0 0;font-size:12px;color:var(--ink3)">Catégorie : le code ou le libellé (${S.cats.map(c=>c.c+' = '+esc(c.l)).join(', ')}). Les codes et les événements figurent dans la feuille « Codes » du modèle.${S.scoped?' Votre rôle est limité à votre organisation : tous les dossiers importés y seront rattachés.':''}</p>
+  <div class="sec">2. Choisir le fichier rempli</div>
+  <div class="fld"><label for="imp-f">Fichier Excel (.xlsx ou .xls)</label><input class="inp" id="imp-f" type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onchange="impRead(this)"></div>
+  <div id="imp-res" style="margin-top:12px"></div>`,
+  `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn p" id="imp-go" disabled onclick="doImport()">Importer</button>`,1)}
+async function impTemplate(){
+  if(!window.ExcelJS){toast('Modèle indisponible : le générateur Excel n\'a pas pu être chargé');return}
+  try{const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Dossiers',{views:[{state:'frozen',ySplit:1}]}),e=EV(UI.ev)||S.events.find(x=>!x.arch);
+    ws.addRow(IMP_COLS.map(c=>c[1]));ws.addRow(['Diop','Awa','F',new Date(Date.UTC(2009,3,12)),S.cats[0].c,'Sénégal','Natation','Sénégal','12 rue Carnot, Dakar','+221 77 000 00 00','awa.diop@exemple.com',e?e.l:'',e&&e.gs[0]||'']);
+    IMP_COLS.forEach((c,i)=>{const cell=ws.getRow(1).getCell(i+1);cell.font={bold:true,color:{argb:'FFFFFFFF'}};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:c[2]?'FF1D4ED8':'FF64748B'}};ws.getColumn(i+1).width=[18,18,12,18,14,24,22,16,30,20,28,26,20][i]});
+    ws.getColumn(4).numFmt='dd/mm/yyyy';ws.getColumn(10).numFmt='@';
+    for(let r=2;r<=1001;r++){ws.getCell(r,3).dataValidation={type:'list',allowBlank:true,formulae:['"F,M"']};ws.getCell(r,5).dataValidation={type:'list',allowBlank:false,formulae:['"'+S.cats.map(c=>c.c).join(',')+'"']}}
+    const k=wb.addWorksheet('Codes');k.columns=[{width:16},{width:40},{width:6},{width:40},{width:50}];k.addRow(['Code catégorie','Catégorie','','Événement','Sous-classements proposés']);k.getRow(1).font={bold:true};
+    for(let i=0;i<Math.max(S.cats.length,S.events.length);i++){const c=S.cats[i],v=S.events[i];k.addRow([c?c.c:'',c?c.l:'','',v?v.l:'',v?v.gs.join(', '):''])}
+    k.addRow([]);k.addRow(['En bleu : colonnes obligatoires. Supprimez la ligne d\'exemple avant d\'importer. Date au format jj/mm/aaaa.']);
+    const buf=await wb.xlsx.writeBuffer(),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.download='modele_import_dossiers.xlsx';document.body.appendChild(a);a.click();a.remove();IMPT={size:buf.byteLength};toast('Modèle téléchargé : modele_import_dossiers.xlsx')}
+  catch(x){console.error(x);toast('Modèle indisponible')}}
+let IMPT=null;
+const loadXlsx=()=>window.XLSX?Promise.resolve():new Promise((ok,ko)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=ok;s.onerror=ko;document.head.appendChild(s)});
+async function impRead(inp){const f=inp.files[0],box=$('#imp-res');IMP=null;$('#imp-go').disabled=true;if(!f)return;
+  if(!/\.xlsx?$/i.test(f.name)){box.innerHTML='<div class="note w" style="margin:0">Choisissez un fichier Excel (.xlsx ou .xls). Pour un fichier CSV, ouvrez-le dans Excel et enregistrez-le au format Excel.</div>';return}
+  if(f.size>5e6){box.innerHTML='<div class="note w" style="margin:0">Fichier trop volumineux (5 Mo maximum).</div>';return}
+  box.innerHTML='<p style="margin:0;color:var(--ink2)">Lecture du fichier…</p>';
+  let rows;try{await loadXlsx();const wb=XLSX.read(await f.arrayBuffer(),{type:'array',cellDates:true}),ws=wb.Sheets[wb.SheetNames.find(n=>norm(n)==='dossiers')||wb.SheetNames[0]];rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,dateNF:'yyyy-mm-dd',defval:''})}
+  catch(x){console.error(x);box.innerHTML='<div class="note w" style="margin:0">Fichier illisible : vérifiez qu\'il s\'agit bien d\'un classeur Excel et qu\'il n\'est pas protégé par mot de passe.</div>';return}
+  impParse(rows,f.name)}
+function impParse(rows,name){const box=$('#imp-res'),hd=(rows[0]||[]).map(h=>IMP_KEYS[norm(h)]||''),hasHead=hd.includes('ln')&&hd.includes('fn');
+  const col=hasHead?hd:IMP_COLS.map(c=>c[0]),data=rows.slice(hasHead?1:0).map((r,i)=>[i+(hasHead?2:1),r]).filter(x=>x[1].some(v=>String(v).trim()));
+  const evBy=t=>{t=norm(t);return t?S.events.find(e=>norm(e.id)===t||norm(e.l)===t):null},catBy=t=>{t=norm(t);return S.cats.find(c=>norm(c.c)===t||norm(c.l)===t)};
+  const date=v=>{v=String(v).trim();let m=v.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(!m){const d=v.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/);if(d)m=[0,d[3],d[2],d[1]]}if(!m)return v?null:'';const y=+m[1],mo=+m[2],d=+m[3];return y>1900&&y<2100&&mo>=1&&mo<=12&&d>=1&&d<=31?`${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`:null};
+  const ok=[],ko=[],warn=[],seen=new Set(S.persons.filter(p=>p.st!=='REJ').map(p=>norm(p.ln)+'|'+norm(p.fn)+'|'+p.dob));
+  if(data.length>2000){box.innerHTML='<div class="note w" style="margin:0">Le fichier contient plus de 2 000 lignes : découpez-le en plusieurs fichiers.</div>';return}
+  data.forEach(([n,r])=>{const g={};col.forEach((k,i)=>{if(k)g[k]=String(r[i]??'').trim()});const er=[];
+    if(!g.ln)er.push('nom manquant');if(!g.fn)er.push('prénom manquant');const c=catBy(g.cat);if(!c)er.push(g.cat?'catégorie inconnue « '+g.cat+' »':'catégorie manquante');
+    const org=S.scoped?me().org:g.org;if(!org)er.push('organisation manquante');const dob=date(g.dob||'');if(dob===null)er.push('date de naissance illisible « '+g.dob+' »');
+    const sx=/^m/i.test(g.sx||'')?'M':/^f/i.test(g.sx||'')?'F':'';if(g.sx&&!sx)er.push('sexe illisible « '+g.sx+' »');
+    const em=(g.email||'').toLowerCase();if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em))er.push('e-mail invalide');
+    const e=g.ev?evBy(g.ev):EV(UI.ev);if(g.ev&&!e)er.push('événement inconnu « '+g.ev+' »');
+    if(er.length){ko.push([n,er.join(', ')]);return}
+    const key=norm(g.ln)+'|'+norm(g.fn)+'|'+dob;if(seen.has(key))warn.push([n,g.fn+' '+g.ln+' : doublon possible']);seen.add(key);
+    ok.push({ln:g.ln.slice(0,80),fn:g.fn.slice(0,80),sx,dob,cat:c.c,org:org.slice(0,120),fct:(g.fct||'').slice(0,120),nat:(g.nat||'').slice(0,80),addr:(g.addr||'').slice(0,200),tel:(g.tel||'').slice(0,40),email:em.slice(0,120),ev:e?e.id:'',grp:e?(g.grp||'').slice(0,80):''})});
+  IMP={ok,ko,warn,name};$('#imp-go').disabled=!ok.length;$('#imp-go').textContent=ok.length?`Importer ${ok.length} dossier${ok.length>1?'s':''}`:'Importer';
+  const lst=(a,cl)=>a.length?`<div class="tw" style="max-height:150px;overflow:auto;border:1px solid var(--line);border-radius:8px;margin-top:8px"><table class="t"><tbody>${a.slice(0,50).map(x=>`<tr><td class="num" style="width:80px">Ligne ${x[0]}</td><td><span class="chip ${cl}">${esc(x[1])}</span></td></tr>`).join('')}</tbody></table></div>${a.length>50?`<p style="font-size:12px;color:var(--ink3);margin:4px 0 0">50 premières lignes affichées sur ${a.length}.</p>`:''}`:'';
+  box.innerHTML=`<div class="note${ok.length?'':' w'}" style="margin:0"><b>${esc(name)}</b> : ${data.length} ligne(s) lue(s) — <b>${ok.length} prête(s) à importer</b>, ${ko.length} rejetée(s)${warn.length?`, ${warn.length} doublon(s) possible(s)`:''}.${hasHead?'':' Aucune ligne de titres reconnue : les colonnes sont lues dans l\'ordre du modèle.'}</div>
+   ${ko.length?'<div class="sec">Lignes rejetées (à corriger dans le fichier)</div>'+lst(ko,'b'):''}${warn.length?'<div class="sec">Points d\'attention (importés quand même)</div>'+lst(warn,'w'):''}`}
 function doImport(){
-  let ok=0,ko=0,seq=newId();const evBy=t=>{t=(t||'').toLowerCase();return S.events.find(e=>e.id.toLowerCase()===t||e.l.toLowerCase()===t)};
-  $('#imp').value.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).forEach(l=>{const a=l.split(/;|\t/).map(x=>x.trim());
-    if(a[0].toLowerCase()==='nom')return;const c=(a[4]||'').toUpperCase();
-    if(a.length<6||!a[0]||!a[1]||!S.cats.some(x=>x.c===c)){ko++;return}
-    seq+=7;S.persons.unshift({id:seq+'-'+(10+ok%80),ln:a[0],fn:a[1],sx:(a[2]||'').toUpperCase()==='M'?'M':'F',dob:/^\d{4}-\d{2}-\d{2}$/.test(a[3])?a[3]:'',cat:c,org:a[5],fct:a[6]||'',nat:a[7]||'',ev:(evBy(a[8])||EV(UI.ev)||{id:''}).id,grp:(evBy(a[8])||EV(UI.ev))?a[9]||'':'',photo:'',hasPh:false,doc:false,bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:''});ok++});
-  if(!ok&&!ko){toast('Aucune ligne à importer');return}
-  log('Dossiers',`Import en masse : ${ok} créé(s), ${ko} rejeté(s)`);closeAll();F.st='DRAFT';render();toast(`${ok} dossier(s) importé(s)${ko?`, ${ko} ligne(s) rejetée(s)`:''}`);
+  if(!IMP||!IMP.ok.length){toast('Aucune ligne à importer');return}
+  let seq=newId();IMP.ok.forEach((r,i)=>{seq+=7;S.persons.unshift({id:seq+'-'+(10+i%80),...r,photo:'',pv:0,hasPh:false,doc:false,bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:''})});
+  const n=IMP.ok.length,k=IMP.ko.length;log('Dossiers',`Import Excel « ${IMP.name} » : ${n} créé(s), ${k} rejeté(s)`);IMP=null;closeAll();F.st='DRAFT';render();toast(`${n} dossier(s) importé(s)${k?`, ${k} ligne(s) rejetée(s)`:''}`);
 }
 function doDel(id){const p=P(id),n=nm(p);S.persons=S.persons.filter(x=>x.id!==id);S.reqs=S.reqs.filter(q=>q.pid!==id);log('Dossiers','Suppression de '+n);closeAll();render();toast('Dossier supprimé')}
 
