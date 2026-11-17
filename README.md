@@ -47,9 +47,10 @@ automatiquement, une seule fois, au démarrage suivant un déploiement.
 `/api/health` (public) donne l'état du service et un résumé chiffré du contrôle d'intégrité, sans donnée nominative.
 
 ## Limites connues
-- La liste des dossiers est chargée en une fois : prévu pour quelques milliers de dossiers, pas pour des dizaines de milliers.
+- La liste des dossiers est chargée en une fois : testé avec 2 250 dossiers (environ 630 Ko), prévu pour quelques milliers, pas pour des dizaines de milliers.
 - Un compte Client voit le dossier de sa dernière invitation ; une même adresse invitée à deux événements ne gère que le plus récent en ligne.
 - Deux agents qui modifient le même dossier au même moment : la dernière écriture l'emporte (les changements de statut incohérents sont refusés).
+- Deux créations simultanées ne peuvent pas prendre le même numéro : le serveur attribue un autre numéro et l'interface le signale.
 
 ## Développement local
 ```

@@ -17,9 +17,10 @@ async function mailStatus() {
 // État du service (public : uniquement des compteurs, aucune donnée nominative). Crée ou met à niveau la base si nécessaire.
 module.exports = handler('GET', async (req, res) => {
   const r = await withDb(async c => {
+    const t0 = Date.now(); await c.query('SELECT 1'); const ms = Date.now() - t0; // délai d'un aller-retour avec la base
     const n = (await c.query("SELECT (SELECT count(*) FROM persons)::int AS dossiers, (SELECT count(*) FROM users WHERE active AND role<>'Client')::int AS comptes, (SELECT count(*) FROM users WHERE role='Client')::int AS comptes_clients, (SELECT count(*) FROM invitations)::int AS invitations")).rows[0];
     const i = await integrity(c, false);
-    return { ...n, schema: i.version, integrite: { bloquants: i.bloquants, attentions: i.attentions, infos: i.infos, detail: i.checks.filter(k => k.count).map(k => `${k.level} : ${k.label} (${k.count})`) } };
+    return { ...n, latence_base_ms: ms, schema: i.version, integrite: { bloquants: i.bloquants, attentions: i.attentions, infos: i.infos, detail: i.checks.filter(k => k.count).map(k => `${k.level} : ${k.label} (${k.count})`) } };
   });
   res.status(200).json({ ok: true, database: 'connectée', session: !!process.env.SESSION_SECRET, ...r, mail: await mailStatus() });
 });

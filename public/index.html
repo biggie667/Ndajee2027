@@ -225,7 +225,7 @@ table.t{width:100%;border-collapse:collapse;font-size:13px}
   <aside class="side">
     <div class="brand"><div class="brand-m">DG</div><div><b>NDAGE 2026</b><span>Système d'accréditation</span></div></div>
     <nav class="nav" id="nav"></nav>
-    <div class="side-f">DG Groupe · v22</div>
+    <div class="side-f">DG Groupe · v23</div>
   </aside>
   <div class="wrap">
     <header class="top" id="top"></header>
@@ -288,7 +288,7 @@ function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t
 /* ============ État ============ */
 let S,VIEW='dash',F={q:'',cat:'',st:'',org:'',grp:'',page:1},SEL=new Set(),UI={rule:'',rep:'cat',rq:'PEND',tplP:'',pt:'APP',aq:'',ev:''};
 /* ---- Synchronisation avec le serveur ---- */
-let LAST=null,SYNC=Promise.resolve(),TMR=0,LOADED=0;
+let LAST=null,SYNC=Promise.resolve(),TMR=0,LOADED=0,PEND=0;
 const snapOf=()=>({p:new Map(S.persons.map(p=>[p.id,JSON.stringify(p)])),r:new Map(S.reqs.map(q=>[q.id,JSON.stringify(q)])),u:new Map(S.users.map(u=>[u.id,JSON.stringify(u)])),
   roles:JSON.stringify(S.roles),cats:JSON.stringify(S.cats),zones:JSON.stringify(S.zones),privs:JSON.stringify(S.privs),matrix:JSON.stringify(S.matrix),tpl:JSON.stringify(S.tpl),events:JSON.stringify(S.events),rinfo:JSON.stringify(S.rinfo)});
 async function api(path,body){const r=await fetch(path,body===undefined?{credentials:'same-origin'}:{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -297,16 +297,19 @@ function save(){clearTimeout(TMR);TMR=setTimeout(flush,250)}
 function flush(){TMR=0;SYNC=SYNC.then(async()=>{
   if(!S||!LAST)return;const n=snapOf(),b={},au=S.audit.filter(a=>a._n);
   const pu=S.persons.filter(p=>LAST.p.get(p.id)!==n.p.get(p.id)),pd=[...LAST.p.keys()].filter(id=>!n.p.has(id));
-  if(pu.length||pd.length)b.persons={up:pu,del:pd};
-  const ru=S.reqs.filter(q=>LAST.r.get(q.id)!==n.r.get(q.id));if(ru.length)b.reqs={up:ru};
+  if(pu.length||pd.length)b.persons={up:pu.map(p=>({...p})),del:pd};
+  const ru=S.reqs.filter(q=>LAST.r.get(q.id)!==n.r.get(q.id));if(ru.length)b.reqs={up:ru.map(q=>({...q}))};
+  // « nw » (création) n'est transmis qu'une fois : retiré tout de suite, l'envoi suivant traite l'élément comme existant
+  [...pu,...ru].forEach(x=>{if(x.nw){delete x.nw;(x.pid!==undefined&&x.type?n.r:n.p).set(x.id,JSON.stringify(x))}});
   const uu=S.users.filter(u=>LAST.u.get(u.id)!==n.u.get(u.id));if(uu.length)b.users={up:uu};
   ['roles','rinfo','cats','zones','privs','matrix','tpl','events'].forEach(k=>{if(LAST[k]!==n[k])b[k]=S[k]});
   if(au.length)b.audit=au;
   if(!Object.keys(b).length)return;
-  let r;try{r=await api('/api/sync',b)}catch(e){r={ok:false,status:0,j:{error:'Connexion au serveur impossible.'}}}
+  let r;PEND=1;try{r=await api('/api/sync',b)}catch(e){r={ok:false,status:0,j:{error:'Connexion au serveur impossible.'}}}PEND=0;
   if(r.ok){au.forEach(a=>delete a._n);uu.forEach(u=>{delete u.pw;n.u.set(u.id,JSON.stringify(u))});
     // photo envoyée : on ne la garde pas en mémoire, elle sera relue à l'unité depuis le serveur
-    pu.forEach(p=>{if(p.photo&&JSON.stringify(p)===n.p.get(p.id)){p.photo='';p.pv=Math.floor(Date.now()/1000);n.p.set(p.id,JSON.stringify(p))}});LAST=n;return}
+    pu.forEach(p=>{if(p.photo&&JSON.stringify(p)===n.p.get(p.id)){p.photo='';p.pv=Math.floor(Date.now()/1000);n.p.set(p.id,JSON.stringify(p))}});LAST=n;
+    const rm=r.j.remap||{},k=Object.keys(rm);if(k.length){closeAll();await reload();toast(k.length===1?`Numéro ${k[0]} déjà utilisé : le numéro ${rm[k[0]]} a été attribué`:`${k.length} numéros déjà utilisés ont été réattribués automatiquement`)}return}
   if(r.status===401){showLogin(r.j.error);return}
   closeAll();await reload();toast('Non enregistré — '+(r.j.error||'erreur serveur'));
 }).catch(e=>console.error(e))}
@@ -319,10 +322,12 @@ async function doLogin(ev){ev.preventDefault();const b=$('#l-btn');b.disabled=tr
   let r;try{r=await api('/api/login',{email:$('#l-em').value,password:$('#l-pw').value})}catch(e){r={ok:false,j:{error:'Connexion au serveur impossible.'}}}
   b.disabled=false;if(!r.ok){$('#l-err').textContent=r.j.error||'Connexion impossible.';return}
   VIEW='dash';await reload()}
-async function logout(){await SYNC;try{await api('/api/logout',{})}catch(e){}showLogin()}
+async function logout(){await flushNow();try{await api('/api/logout',{})}catch(e){}showLogin()}
 const me=()=>S.users.find(u=>u.id===S.me)||S.users[0];
 const can=k=>(S.roles[me().role]||[]).includes(k);
 const P=id=>S.persons.find(p=>p.id===id);
+/* Modifications locales déjà répercutées par le serveur (suppression d'un événement, d'une zone…) : inutile de renvoyer chaque dossier. */
+const quiet=ps=>{if(LAST)ps.forEach(p=>LAST.p.set(p.id,JSON.stringify(p)))};
 const rI=r=>S.rinfo[r]||{t:'',m:'',s:0};
 /* Les photos ne sont pas dans la liste des dossiers : chacune est chargée depuis /api/photo (pv = version, 0 si absente). */
 const phSrc=p=>p.photo||(p.pv?'/api/photo?id='+encodeURIComponent(p.id)+'&v='+p.pv:'');
@@ -473,7 +478,7 @@ function evSave(id){const l=$('#v-l').value.trim();if(!l){toast('Le nom de l\'é
   log('Événements',(id?'Modification de « ':'Création de « ')+l+' » ('+e.type+')');closeAll();render();toast('Événement enregistré')}
 function evDel(id){const e=EV(id),n=S.persons.filter(p=>p.ev===id).length;modal('Supprimer l\'événement',`<p style="margin:0">Supprimer <b>${esc(e.l)}</b> ? ${n?`Ses <b>${n}</b> dossier(s) sont conservés mais ne seront plus classés.`:'Aucun dossier n\'y est rattaché.'} Pour le masquer sans rien perdre, utilisez plutôt « Archiver ».</p>`,
   `<button class="btn" onclick="closeOv(this)">Annuler</button><button class="btn bad" onclick="evDelDo('${id}')">Supprimer</button>`)}
-function evDelDo(id){const e=EV(id);S.events=S.events.filter(x=>x.id!==id);S.persons.forEach(p=>{if(p.ev===id){p.ev='';p.grp=''}});if(UI.ev===id)UI.ev='';log('Événements','Suppression de « '+e.l+' »');closeAll();render();toast('Événement supprimé')}
+function evDelDo(id){const e=EV(id);S.events=S.events.filter(x=>x.id!==id);const ch=S.persons.filter(p=>p.ev===id);ch.forEach(p=>{p.ev='';p.grp=''});quiet(ch);if(UI.ev===id)UI.ev='';log('Événements','Suppression de « '+e.l+' »');closeAll();render();toast('Événement supprimé')}
 
 /* ============ Registre (demandes + populations) ============ */
 let CUR=[];
@@ -552,7 +557,7 @@ function bulk(st){let ok=0,ko=0;[...SEL].forEach(id=>{const p=P(id);const from=s
 /* ============ Formulaire dossier ============ */
 let PH='';
 function editP(id,defCat){
-  const p=id?P(id):{ln:'',fn:'',sx:'F',dob:'',nat:'',cat:defCat||S.cats[0].c,org:'',fct:'',doc:false,photo:'',hasPh:false,ev:EV(UI.ev)?UI.ev:'',grp:F.grp||''};PH='';if(!id&&S.scoped)p.org=me().org;
+  const p=id?P(id):{ln:'',fn:'',sx:'',dob:'',nat:'',cat:defCat||S.cats[0].c,org:'',fct:'',doc:false,photo:'',hasPh:false,ev:EV(UI.ev)?UI.ev:'',grp:F.grp||''};PH='';if(!id&&S.scoped)p.org=me().org;
   modal(id?'Modifier le dossier':'Nouveau dossier',`<div class="form">
    <div class="fld"><label for="e-ln">Nom</label><input class="inp" id="e-ln" value="${esc(p.ln)}"></div><div class="fld"><label for="e-fn">Prénom</label><input class="inp" id="e-fn" value="${esc(p.fn)}"></div>
    <div class="fld"><label for="e-sx">Sexe</label><select class="inp" id="e-sx">${opt([['F','Féminin'],['M','Masculin']],p.sx||'','Non renseigné')}</select></div><div class="fld"><label for="e-dob">Date de naissance</label><input class="inp" id="e-dob" type="date" value="${p.dob}"></div>
@@ -578,7 +583,7 @@ function readPh(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
 function saveP(id){
   const g=k=>$('#e-'+k).value.trim(),ln=g('ln'),fn=g('fn');if(!ln||!fn||!g('org')){toast('Nom, prénom et organisation sont obligatoires');return}
   let p=id?P(id):null;
-  if(!p){const n=newId()+1+Math.floor(Math.random()*20);p={id:n+'-'+(10+Math.floor(Math.random()*80)),bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:'',hasPh:false,photo:''};S.persons.unshift(p)}
+  if(!p){const n=newId()+1+Math.floor(Math.random()*20);p={id:n+'-'+(10+Math.floor(Math.random()*80)),nw:1,bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:'',hasPh:false,photo:''};S.persons.unshift(p)}
   Object.assign(p,{ln,fn,sx:g('sx'),dob:g('dob'),cat:g('cat'),nat:g('nat'),org:g('org'),fct:g('fct'),addr:g('addr'),tel:g('tel'),email:g('email'),doc:$('#e-doc').checked});if($('#e-ev')){p.ev=g('ev');p.grp=p.ev?g('grp'):''}else{p.ev=p.ev||'';p.grp=p.grp||''}if(PH){p.photo=PH;p.hasPh=true}
   log('Dossiers',(id?'Modification de ':'Création de ')+nm(p),p.id);closeAll();render();openP(p.id);toast('Dossier enregistré');
 }
@@ -639,7 +644,7 @@ function impParse(rows,name){const box=$('#imp-res'),hd=(rows[0]||[]).map(h=>IMP
    ${ko.length?'<div class="sec">Lignes rejetées (à corriger dans le fichier)</div>'+lst(ko,'b'):''}${warn.length?'<div class="sec">Points d\'attention (importés quand même)</div>'+lst(warn,'w'):''}`}
 function doImport(){
   if(!IMP||!IMP.ok.length){toast('Aucune ligne à importer');return}
-  let seq=newId();IMP.ok.forEach((r,i)=>{seq+=7;S.persons.unshift({id:seq+'-'+(10+i%80),...r,photo:'',pv:0,hasPh:false,doc:false,bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:''})});
+  let seq=newId();IMP.ok.forEach((r,i)=>{seq+=7;S.persons.unshift({id:seq+'-'+(10+Math.floor(Math.random()*80)),nw:1,...r,photo:'',pv:0,hasPh:false,doc:false,bg:'PEND',st:'DRAFT',xz:[],xp:[],xm:0,note:''})});
   const n=IMP.ok.length,k=IMP.ko.length;log('Dossiers',`Import Excel « ${IMP.name} » : ${n} créé(s), ${k} rejeté(s)`);IMP=null;closeAll();F.st='DRAFT';render();toast(`${n} dossier(s) importé(s)${k?`, ${k} ligne(s) rejetée(s)`:''}`);
 }
 function doDel(id){const p=P(id),n=nm(p);S.persons=S.persons.filter(x=>x.id!==id);S.reqs=S.reqs.filter(q=>q.pid!==id);log('Dossiers','Suppression de '+n);closeAll();render();toast('Dossier supprimé')}
@@ -700,7 +705,7 @@ function refSave(kind,i){const c=$('#r-c').value.trim().toUpperCase(),n=$('#r-n'
   if(i<0){if(S[kind].some(x=>x.c===c)){toast('Ce code existe déjà');return}S[kind].push({c,n,o:kind==='zones'&&$('#r-o').checked?1:0})}else{S[kind][i].n=n;if(kind==='zones')S[kind][i].o=$('#r-o').checked?1:0}
   log('Matrice d\'accès',`${kind==='zones'?'Zone':'Privilège'} ${c} ${i<0?'créé':'modifié'} (${n})`);closeAll();render()}
 function refDel(kind,i){const c=S[kind][i].c,k=kind==='zones'?'z':'p',xk=kind==='zones'?'xz':'xp';S[kind].splice(i,1);
-  Object.values(S.matrix).forEach(m=>m[k]=m[k].filter(x=>x!==c));S.persons.forEach(p=>p[xk]=p[xk].filter(x=>x!==c));
+  Object.values(S.matrix).forEach(m=>m[k]=m[k].filter(x=>x!==c));const ch=S.persons.filter(p=>p[xk].includes(c));ch.forEach(p=>p[xk]=p[xk].filter(x=>x!==c));quiet(ch);
   log('Matrice d\'accès',`${kind==='zones'?'Zone':'Privilège'} ${c} supprimé`);closeAll();render()}
 
 /* ============ Ajouts d'accès ============ */
@@ -724,7 +729,7 @@ const reqCodes=t=>t==='meal'?'<option value="">—</option>':opt((t==='zone'?S.z
 function reqSave(){const pid=$('#q-p').value.trim(),p=P(pid),type=$('#q-t').value,code=$('#q-c').value,motif=$('#q-m').value.trim();
   if(!p){toast('Dossier introuvable : choisissez un titulaire dans la liste');return}if(!motif){toast('La justification est obligatoire');return}
   const e=eff(p);if((type==='zone'&&e.z.some(z=>z.c===code))||(type==='priv'&&e.p.some(x=>x.c===code))||(type==='meal'&&e.m)){toast('Ce droit est déjà attribué à cette personne');return}
-  const id='AA-'+String(Math.max(0,...S.reqs.map(q=>parseInt(q.id.slice(3))))+1).padStart(3,'0');S.reqs.unshift({id,pid,type,code,motif,by:me().n,t:Date.now(),st:'PEND',dec:''});
+  const id='AA-'+String(Math.max(0,...S.reqs.map(q=>parseInt(q.id.slice(3))))+1).padStart(3,'0');S.reqs.unshift({id,nw:1,pid,type,code,motif,by:me().n,t:Date.now(),st:'PEND',dec:''});
   log('Ajouts d\'accès',`Demande ${id} pour ${nm(p)}`,pid);closeAll();UI.rq='PEND';go('acces',1);toast('Demande '+id+' enregistrée')}
 function reqDecide(id,ok){const q=S.reqs.find(x=>x.id===id),p=P(q.pid);q.st=ok?'OK':'NO';q.dec=me().n;
   if(ok&&p){if(q.type==='zone')p.xz.push(q.code);else if(q.type==='priv')p.xp.push(q.code);else p.xm=1}
@@ -820,8 +825,8 @@ async function xlsxOut(name,build){
       m=v.match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/);if(m)return new Date(Date.UTC(+m[3],m[2]-1,+m[1],+m[4],+m[5]));return v};
     const info=wb.addWorksheet('Informations');info.columns=[{width:30},{width:70}];
     [['Événement',S.tpl.ev],['Export',sheets.map(x=>x.title).join(', ')],['Généré le',now.toLocaleString('fr-FR')],['Généré par',me().n+' ('+me().role+')'],
-     ['Source','Base de données de la plateforme, relue au moment de l\'export'],['Dossiers en base',S.persons.length],[],['Feuille','Lignes de données'],...sheets.map(x=>[x.title,x.rows.length-1])].forEach(r=>info.addRow(r));
-    info.getColumn(1).font={bold:true};info.getRow(8).font={bold:true};
+     ['Source','Base de données de la plateforme, relue au moment de l\'export'],['Périmètre',UI.ev==='-'?'Dossiers sans événement':EV(UI.ev)?'Événement : '+EV(UI.ev).l:'Tous les événements'],['Dossiers en base',S.persons.length],[],['Feuille','Lignes de données'],...sheets.map(x=>[x.title,x.rows.length-1])].forEach(r=>info.addRow(r));
+    info.getColumn(1).font={bold:true};info.getRow(9).font={bold:true};
     const used=new Set(['informations']);
     sheets.forEach(sh=>{let nm=sh.title.replace(/[\[\]:*?\/\\']/g,' ').slice(0,31).trim(),i=2;while(used.has(nm.toLowerCase()))nm=nm.slice(0,28)+' '+i++;used.add(nm.toLowerCase());
       const ws=wb.addWorksheet(nm,{views:[{state:'frozen',ySplit:1}]}),H=sh.rows[0],n=H.length;
@@ -841,7 +846,7 @@ V.rep=()=>{
   const r=REP[UI.rep],d=r[2](),ex=can('export');
   return `<div class="rep" style="margin-bottom:16px">${Object.entries(REP).map(([k,v])=>`<button class="${UI.rep===k?'on':''}" onclick="UI.rep='${k}';render()"><b>${v[0]}</b><span>${v[1]}</span></button>`).join('')}</div>
   <div class="card"><div class="card-h"><div><h3>${r[0]}</h3><span style="font-size:12px;color:var(--ink3)">${d.length-1} ligne(s) · ${fmtT(Date.now())}</span></div><span class="sp"></span>
-   ${ex?`<button class="btn p" onclick="runExport('${UI.rep}')">Exporter ce rapport (Excel)</button><button class="btn" onclick="exportAll()">Classeur complet (Excel)</button><button class="btn" onclick="exportFile('sauvegarde_ndage_acr.json',JSON.stringify(S,(k,v)=>k==='photo'?'':v,1))">Sauvegarde complète (JSON)</button>`:'<span style="color:var(--ink3)">Export non autorisé pour votre rôle</span>'}</div>
+   ${ex?`<button class="btn p" onclick="runExport('${UI.rep}')">Exporter ce rapport (Excel)</button><button class="btn" onclick="exportAll()">Classeur complet (Excel)</button><button class="btn" onclick="exportFile('sauvegarde_ndage_acr.json',JSON.stringify(S,(k,v)=>k==='photo'?'':v,1))">Sauvegarde des données (JSON, sans photos)</button>`:'<span style="color:var(--ink3)">Export non autorisé pour votre rôle</span>'}</div>
   <div class="tw"><table class="t"><thead><tr>${d[0].map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${d.slice(1,61).map(l=>`<tr>${l.map(v=>`<td${typeof v==='number'?' class="num r"':''}>${esc(v)}</td>`).join('')}</tr>`).join('')||`<tr><td class="empty" colspan="${d[0].length}">Aucune donnée.</td></tr>`}</tbody></table></div>
   ${d.length>61?`<div class="pg">60 premières lignes affichées sur ${d.length-1}. L'export contient la totalité.</div>`:''}</div>`;
 };
@@ -1045,6 +1050,7 @@ V.dbcheck=()=>{
 /* ============ Démarrage ============ */
 (async function(){const inv=new URLSearchParams(location.search).get('inv');if(inv){showForm(inv);return}const h=location.hash.slice(1);if(V[h])VIEW=h;try{await reload()}catch(e){showLogin('Serveur indisponible.')}})();
 window.addEventListener('focus',()=>{if(S&&!TMR&&!$('#ovs').children.length&&Date.now()-LOADED>30000)SYNC.then(()=>{if(S&&!TMR&&!$('#ovs').children.length)reload()})});
+window.addEventListener('beforeunload',e=>{if(TMR){flush()}if(TMR||PEND){e.preventDefault();e.returnValue=''}});
 window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(V[h]&&h!==VIEW)go(h)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const o=$('#ovs').lastElementChild;if(o)o.remove()}});
 </script>
